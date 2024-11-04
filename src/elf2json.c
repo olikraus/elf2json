@@ -27,23 +27,35 @@
 #include <gelf.h>
 #include <string.h>
 
+
+
+
 /* read only elf */
 struct _relf_struct
 {
   int fd;
   Elf *elf;                                     // elf object, returned from elf_begin
   
-  uintmax_t section_header_total;               // shdrnum, total number of section headers (each section has a section header, so this is the same as the total number of sectios)
-  uintmax_t section_header_string_table_index;  // shdrstrndx, the index of the section where we find the strings for the the section header names;
-  uintmax_t program_header_total;               // phdrnum, total number of program headers
+  size_t section_header_total;               // shdrnum, total number of section headers (each section has a section header, so this is the same as the total number of sectios)
+  size_t section_header_string_table_index;  // shdrstrndx, the index of the section where we find the strings for the the section header names;
+  size_t program_header_total;               // phdrnum, total number of program headers
   
   GElf_Ehdr elf_file_header;                    // ehdr elf file header
   GElf_Shdr section_header;                     // shdr section header
   
-  uintmax_t strtab_section_header_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab
+  size_t strtab_section_header_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab
 };
 typedef struct _relf_struct relf_struct;
 
+
+#ifdef MINGW
+// seems to be missing on mingw
+unsigned long __stack_chk_guard = 0xaa55;
+void __attribute__ ((noreturn)) __stack_chk_fail (void)
+{
+	exit(0);
+}
+#endif
 
 int relf_init(relf_struct *relf, const char *elf_filename)
 {
@@ -118,10 +130,10 @@ int main ( int argc , char ** argv )
   char * k ;
   int elfclass;
   char *elfclassstr;
-  uintmax_t shdrnum;
-  uintmax_t shdrstrndx;
-  uintmax_t strtab_section_index; 
-  uintmax_t phdrnum;
+  size_t shdrnum;
+  size_t shdrstrndx;
+  size_t strtab_section_index; 
+  size_t phdrnum;
   
   
   GElf_Ehdr ehdr;
@@ -136,11 +148,11 @@ int main ( int argc , char ** argv )
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
   
-  if (( fd = open( argv[1] , O_RDONLY , 0)) < 0)
+  if (( fd = open( argv[1] , O_RDONLY|O_BINARY , 0)) < 0)
     return perror(argv[1]), 0;
   
   if (( e = elf_begin( fd , ELF_C_READ, NULL )) == NULL )
-    return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+    return fprintf(stderr, "elf_begin: %s\n", elf_errmsg(-1)), 0;
 
   switch ( elf_kind( e ) ) 
   {
