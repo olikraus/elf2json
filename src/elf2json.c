@@ -27,6 +27,21 @@
 #include <gelf.h>
 #include <string.h>
 
+struct _elf_translate_struct
+{
+  size_t n,                     // number
+  const char *m;        // macro
+  const char *d;        // description
+};
+typedef struct _elf_translate_struct elf_translate_struct;
+
+
+#define ET(c,d)  { c, #c, d }
+
+elf_translate_struct 
+ET(ELFCLASSNONE, "Invalid class"),
+ET(ELFCLASS32, "32-bit objects"),
+ET(ELFCLASS64, "64-bit objects")
 
 
 
@@ -128,8 +143,46 @@ int relf_init(relf_struct *relf, const char *elf_filename)
 }
 
 
+void relf_destroy(relf_struct *relf)
+{
+  elf_end(relf->elf);  
+  close(relf->fd);  
+}
 
-int main ( int argc , char ** argv )
+int relf_show_sections(relf_struct *relf)
+{
+  Elf_Scn  *scn;        // section descriptor
+  GElf_Shdr shdr;
+  const char *section_name;
+  /* loop over all sections */
+  scn = NULL;
+  while (( scn = elf_nextscn(relf->elf, scn)) != NULL ) 
+  {
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+    section_name = elf_strptr(relf->elf, relf->section_header_string_table_index, shdr.sh_name );
+    if ( section_name == NULL )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+    printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
+  }
+  return 1;
+}
+
+int main( int argc , char ** argv )
+{
+  relf_struct relf;
+  
+  if ( argc < 2)
+    return 0;
+  
+  relf_init(&relf, argv[1]);
+  relf_show_sections(&relf);
+  relf_destroy(&relf);
+}
+
+
+
+int mainx( int argc , char ** argv )
 {
   int fd ;
   Elf * e ;
