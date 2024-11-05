@@ -63,8 +63,14 @@ int relf_init(relf_struct *relf, const char *elf_filename)
     
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
+
+#ifdef   O_BINARY
+  relf->fd = open( elf_filename , O_RDONLY|O_BINARY , 0);
+#else
+  relf->fd = open( elf_filename , O_RDONLY , 0);
+#endif
   
-  if (( relf->fd = open( elf_filename , O_RDONLY , 0)) >= 0)
+  if ( relf->fd >= 0 )
   {
     if (( relf->elf = elf_begin( relf->fd , ELF_C_READ, NULL )) != NULL )
     {
@@ -147,8 +153,13 @@ int main ( int argc , char ** argv )
     return 0;
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
-  
-  if (( fd = open( argv[1] , O_RDONLY|O_BINARY , 0)) < 0)
+
+#ifdef   O_BINARY
+  fd = open( argv[1] , O_RDONLY|O_BINARY , 0);
+#else
+  fd = open( argv[1] , O_RDONLY , 0);
+#endif
+  if ( fd < 0)
     return perror(argv[1]), 0;
   
   if (( e = elf_begin( fd , ELF_C_READ, NULL )) == NULL )
