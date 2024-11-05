@@ -22,7 +22,6 @@ release: CFLAGS = -O4 -DNDEBUG -DCO_USE_ZLIB -Wall -I./co
 ifeq ($(shell uname -s),Linux)
 LDFLAGS = -lelf -lm
 else
-all: CFLAGS += -DMINGW
 LDFLAGS = -Wl,-Bstatic -lelf -lm
 endif
 

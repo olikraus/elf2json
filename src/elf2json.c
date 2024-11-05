@@ -48,7 +48,7 @@ struct _relf_struct
 typedef struct _relf_struct relf_struct;
 
 
-#ifdef MINGW
+#if defined(__MINGW32__) || defined(__MINGW64__)
 // seems to be missing on mingw
 unsigned long __stack_chk_guard = 0xaa55;
 void __attribute__ ((noreturn)) __stack_chk_fail (void)
@@ -64,12 +64,7 @@ int relf_init(relf_struct *relf, const char *elf_filename)
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
 
-#ifdef   O_BINARY
-  relf->fd = open( elf_filename , O_RDONLY|O_BINARY , 0);
-#else
   relf->fd = open( elf_filename , O_RDONLY , 0);
-#endif
-  
   if ( relf->fd >= 0 )
   {
     if (( relf->elf = elf_begin( relf->fd , ELF_C_READ, NULL )) != NULL )
@@ -154,11 +149,7 @@ int main ( int argc , char ** argv )
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
 
-#ifdef   O_BINARY
-  fd = open( argv[1] , O_RDONLY|O_BINARY , 0);
-#else
   fd = open( argv[1] , O_RDONLY , 0);
-#endif
   if ( fd < 0)
     return perror(argv[1]), 0;
   
