@@ -29,19 +29,49 @@
 
 struct _elf_translate_struct
 {
-  size_t n,                     // number
-  const char *m;        // macro
-  const char *d;        // description
+  size_t n;                     // number
+  char *m;        // macro
+  char *d;        // description
 };
 typedef struct _elf_translate_struct elf_translate_struct;
 
 
 #define ET(c,d)  { c, #c, d }
+#define ETNONE() { 0, NULL, NULL }
 
-elf_translate_struct 
-ET(ELFCLASSNONE, "Invalid class"),
-ET(ELFCLASS32, "32-bit objects"),
-ET(ELFCLASS64, "64-bit objects")
+elf_translate_struct et_elf_class[] = {
+  ET(ELFCLASSNONE, "Invalid class"),
+  ET(ELFCLASS32, "32-bit objects"),
+  ET(ELFCLASS64, "64-bit objects"),
+  ETNONE()
+};
+
+elf_translate_struct et_elf_osabi[] = {
+  ET( ELFOSABI_SYSV, "UNIX System V ABI "),
+  ET( ELFOSABI_HPUX, "HP-UX "),
+  ET( ELFOSABI_NETBSD, "NetBSD.  "),
+  ET( ELFOSABI_GNU, "Object uses GNU ELF extensions.  "),
+  ET( ELFOSABI_SOLARIS, "Sun Solaris.  "),
+  ET( ELFOSABI_AIX, "IBM AIX.  "),
+  ET( ELFOSABI_IRIX, "SGI Irix.  "),
+  ET( ELFOSABI_FREEBSD, "FreeBSD.  "),
+  ET( ELFOSABI_TRU64, "Compaq TRU64 UNIX.  "),
+  ET( ELFOSABI_MODESTO, "Novell Modesto.  "),
+  ET( ELFOSABI_OPENBSD, "OpenBSD.  "),
+  ET( ELFOSABI_ARM_AEABI, "ARM EABI "),
+  ET( ELFOSABI_ARM, "ARM "),
+  ET( ELFOSABI_STANDALONE, "Standalone (embedded) application "),
+  ETNONE()
+};
+
+elf_translate_struct et_e_type[] = {
+  ET( ET_NONE, "No file type "),
+  ET( ET_REL, "Relocatable file "),
+  ET( ET_EXEC, "Executable file "),
+  ET( ET_DYN, "Shared object file "),
+  ET( ET_CORE, "Core file "),
+  ETNONE()
+};
 
 
 
@@ -71,6 +101,34 @@ void __attribute__ ((noreturn)) __stack_chk_fail (void)
 	exit(0);
 }
 #endif
+
+const char *et_get_macro(elf_translate_struct *et, size_t n)
+{
+  size_t i = 0;
+  for(;;)
+  {
+    if ( et[i].m == NULL )
+      break;
+    if ( et[i].n == n )
+      return et[i].m;
+    i++;
+  }
+  return "";
+}
+
+const char *et_get_description(elf_translate_struct *et, size_t n)
+{
+  size_t i = 0;
+  for(;;)
+  {
+    if ( et[i].m == NULL )
+      break;
+    if ( et[i].n == n )
+      return et[i].d;
+    i++;
+  }
+  return "";
+}
 
 int relf_init(relf_struct *relf, const char *elf_filename)
 {
@@ -144,6 +202,26 @@ void relf_destroy(relf_struct *relf)
   close(relf->fd);  
 }
 
+void relf_show_value(elf_translate_struct *et, const char *variable, size_t n)
+{
+  printf("%s: [%lu, \"%s\", \"%s\"]\n", variable, n, et_get_macro(et, n), et_get_description(et, n));
+}
+
+void relf_show_elf_header(relf_struct *relf)
+{
+  char *ident = elf_getident(relf->elf , NULL);
+  // EI_OSABI
+  // ident[EI_ABIVERSION]
+  relf_show_value(et_elf_class, "EI_CLASS", gelf_getclass( relf->elf ));
+  relf_show_value(et_elf_osabi, "EI_OSABI", ident[EI_OSABI]);
+  
+  
+  relf_show_value(et_e_type, "e_type", relf->elf_file_header.e_type );
+  
+  
+  
+}
+
 int relf_show_sections(relf_struct *relf)
 {
   Elf_Scn  *scn;        // section descriptor
@@ -171,6 +249,7 @@ int main( int argc , char ** argv )
     return 0;
   
   relf_init(&relf, argv[1]);
+  relf_show_elf_header(&relf);
   relf_show_sections(&relf);
   relf_destroy(&relf);
 }
