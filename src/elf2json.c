@@ -74,6 +74,191 @@ elf_translate_struct et_e_type[] = {
 };
 
 
+elf_translate_struct et_e_machine[] = {
+  ET( EM_NONE	, "No machine"),
+  ET( EM_M32  , "AT&T WE 32100"),
+  ET( EM_SPARC	 , "SUN SPARC"),
+  ET( EM_386     , "Intel 80386"),
+  ET( EM_68K	, "Motorola m68k family"),
+  ET( EM_88K	, "Motorola m88k family"),
+  ET( EM_IAMCU	 , "Intel MCU"),
+  ET( EM_860	, "Intel 80860"),
+  ET( EM_MIPS	, "MIPS R3000 big-endian"),
+  ET( EM_S370	, "IBM System/370"),
+  ET( EM_MIPS_RS3_LE, "MIPS R3000 little-endian"),
+  ET( EM_PARISC, "HPPA"),
+  ET( EM_VPP500, "Fujitsu VPP500"),
+  ET( EM_SPARC32PLUS, "Sun's 'v8plus'"),
+  ET( EM_960	, "Intel 80960"),
+  ET( EM_PPC	, "PowerPC"),
+  ET( EM_PPC64, "PowerPC 64-bit"),
+  ET( EM_S390	, "IBM S390"),
+  ET( EM_SPU	, "IBM SPU/SPC"),
+  ET( EM_V800	, "NEC V800 series"),
+  ET( EM_FR20	, "Fujitsu FR20"),
+  ET( EM_RH32	, "TRW RH-32"),
+  ET( EM_RCE	, "Motorola RCE"),
+  ET( EM_ARM	, "ARM"),
+  ET( EM_FAKE_ALPHA, "Digital Alpha"),
+  ET( EM_SH	, "Hitachi SH"),
+  ET( EM_SPARCV9, "SPARC v9 64-bit"),
+  ET( EM_TRICORE, "Siemens Tricore"),
+  ET( EM_ARC	, "Argonaut RISC Core"),
+  ET( EM_H8_300, "Hitachi H8/300"),
+  ET( EM_H8_300H, "Hitachi H8/300H"),
+  ET( EM_H8S	, "Hitachi H8S"),
+  ET( EM_H8_500, "Hitachi H8/500"),
+  ET( EM_IA_64, "Intel Merced"),
+  ET( EM_MIPS_X, "Stanford MIPS-X"),
+  ET( EM_COLDFIRE, "Motorola Coldfire"),
+  ET( EM_68HC12, "Motorola M68HC12"),
+  ET( EM_MMA	, "Fujitsu MMA Multimedia Accelerator"),
+  ET( EM_PCP	, "Siemens PCP"),
+  ET( EM_NCPU	, "Sony nCPU embedded RISC"),
+  ET( EM_NDR1	, "Denso NDR1 microprocessor"),
+  ET( EM_STARCORE, "Motorola Start*Core processor"),
+  ET( EM_ME16	, "Toyota ME16 processor"),
+  ET( EM_ST100, "STMicroelectronic ST100 processor"),
+  ET( EM_TINYJ, "Advanced Logic Corp. Tinyj emb.fam"),
+  ET( EM_X86_64, "AMD x86-64 architecture"),
+  ET( EM_PDSP	, "Sony DSP Processor"),
+  ET( EM_PDP10, "Digital PDP-10"),
+  ET( EM_PDP11, "Digital PDP-11"),
+  ET( EM_FX66	, "Siemens FX66 microcontroller"),
+  ET( EM_ST9PLUS, "STMicroelectronics ST9+ 8/16 mc"),
+  ET( EM_ST7	, "STmicroelectronics ST7 8 bit mc"),
+  ET( EM_68HC16, "Motorola MC68HC16 microcontroller"),
+  ET( EM_68HC11, "Motorola MC68HC11 microcontroller"),
+  ET( EM_68HC08, "Motorola MC68HC08 microcontroller"),
+  ET( EM_68HC05, "Motorola MC68HC05 microcontroller"),
+  ET( EM_SVX	, "Silicon Graphics SVx"),
+  ET( EM_ST19	, "STMicroelectronics ST19 8 bit mc"),
+  ET( EM_VAX	, "Digital VAX"),
+  ET( EM_CRIS	, "Axis Communications 32-bit emb.proc"),
+  ET( EM_JAVELIN, "Infineon Technologies 32-bit emb.proc"),
+  ET( EM_FIREPATH, "Element 14 64-bit DSP Processor"),
+  ET( EM_ZSP	, "LSI Logic 16-bit DSP Processor"),
+  ET( EM_MMIX	, "Donald Knuth's educational 64-bit proc"),
+  ET( EM_HUANY, "Harvard University machine-independent object files"),
+  ET( EM_PRISM, "SiTera Prism"),
+  ET( EM_AVR	, "Atmel AVR 8-bit microcontroller"),
+  ET( EM_FR30	, "Fujitsu FR30"),
+  ET( EM_D10V	, "Mitsubishi D10V"),
+  ET( EM_D30V	, "Mitsubishi D30V"),
+  ET( EM_V850	, "NEC v850"),
+  ET( EM_M32R	, "Mitsubishi M32R"),
+  ET( EM_MN10300, "Matsushita MN10300"),
+  ET( EM_MN10200, "Matsushita MN10200"),
+  ET( EM_PJ	, "picoJava"),
+  ET( EM_OPENRISC, "OpenRISC 32-bit embedded processor"),
+  ET( EM_ARC_COMPACT, "ARC International ARCompact"),
+  ET( EM_XTENSA, "Tensilica Xtensa Architecture"),
+  ET( EM_VIDEOCORE, "Alphamosaic VideoCore"),
+  ET( EM_TMM_GPP, "Thompson Multimedia General Purpose Proc"),
+  ET( EM_NS32K, "National Semi. 32000"),
+  ET( EM_TPC	, "Tenor Network TPC"),
+  ET( EM_SNP1K, "Trebia SNP 1000"),
+  ET( EM_ST200, "STMicroelectronics ST200"),
+  ET( EM_IP2K	, "Ubicom IP2xxx"),
+  ET( EM_MAX	, "MAX processor"),
+  ET( EM_CR	, "National Semi. CompactRISC"),
+  ET( EM_F2MC16, "Fujitsu F2MC16"),
+  ET( EM_MSP430, "Texas Instruments msp430"),
+  ET( EM_BLACKFIN, "Analog Devices Blackfin DSP"),
+  ET( EM_SE_C33, "Seiko Epson S1C33 family"),
+  ET( EM_SEP	, "Sharp embedded microprocessor"),
+  ET( EM_ARCA	, "Arca RISC"),
+  ET( EM_UNICORE, "PKU-Unity & MPRC Peking Uni. mc series"),
+  ET( EM_EXCESS, "eXcess configurable cpu"),
+  ET( EM_DXP	, "Icera Semi. Deep Execution Processor"),
+  ET( EM_ALTERA_NIOS2, "Altera Nios II"),
+  ET( EM_CRX	, "National Semi. CompactRISC CRX"),
+  ET( EM_XGATE, "Motorola XGATE"),
+  ET( EM_C166	, "Infineon C16x/XC16x"),
+  ET( EM_M16C	, "Renesas M16C"),
+  ET( EM_DSPIC30F, "Microchip Technology dsPIC30F"),
+  ET( EM_CE	, "Freescale Communication Engine RISC"),
+  ET( EM_M32C	, "Renesas M32C"),
+  ET( EM_TSK3000, "Altium TSK3000"),
+  ET( EM_RS08	, "Freescale RS08"),
+  ET( EM_SHARC, "Analog Devices SHARC family"),
+  ET( EM_ECOG2, "Cyan Technology eCOG2"),
+  ET( EM_SCORE7, "Sunplus S+core7 RISC"),
+  ET( EM_DSP24, "New Japan Radio (NJR) 24-bit DSP"),
+  ET( EM_VIDEOCORE3, "Broadcom VideoCore III"),
+  ET( EM_LATTICEMICO32, "RISC for Lattice FPGA"),
+  ET( EM_SE_C17, "Seiko Epson C17"),
+  ET( EM_TI_C6000, "Texas Instruments TMS320C6000 DSP"),
+  ET( EM_TI_C2000, "Texas Instruments TMS320C2000 DSP"),
+  ET( EM_TI_C5500, "Texas Instruments TMS320C55x DSP"),
+  ET( EM_TI_ARP32, "Texas Instruments App. Specific RISC"),
+  ET( EM_TI_PRU, "Texas Instruments Prog. Realtime Unit"),
+  ET( EM_MMDSP_PLUS, "STMicroelectronics 64bit VLIW DSP"),
+  ET( EM_CYPRESS_M8C, "Cypress M8C"),
+  ET( EM_R32C	, "Renesas R32C"),
+  ET( EM_TRIMEDIA, "NXP Semi. TriMedia"),
+  ET( EM_QDSP6, "QUALCOMM DSP6"),
+  ET( EM_8051	, "Intel 8051 and variants"),
+  ET( EM_STXP7X, "STMicroelectronics STxP7x"),
+  ET( EM_NDS32, "Andes Tech. compact code emb. RISC"),
+  ET( EM_ECOG1X, "Cyan Technology eCOG1X"),
+  ET( EM_MAXQ30, "Dallas Semi. MAXQ30 mc"),
+  ET( EM_XIMO16, "New Japan Radio (NJR) 16-bit DSP"),
+  ET( EM_MANIK, "M2000 Reconfigurable RISC"),
+  ET( EM_CRAYNV2, "Cray NV2 vector architecture"),
+  ET( EM_RX	, "Renesas RX"),
+  ET( EM_METAG, "Imagination Tech. META"),
+  ET( EM_MCST_ELBRUS, "MCST Elbrus"),
+  ET( EM_ECOG16, "Cyan Technology eCOG16"),
+  ET( EM_CR16	, "National Semi. CompactRISC CR16"),
+  ET( EM_ETPU	, "Freescale Extended Time Processing Unit"),
+  ET( EM_SLE9X, "Infineon Tech. SLE9X"),
+  ET( EM_L10M	, "Intel L10M"),
+  ET( EM_K10M	, "Intel K10M"),
+  ET( EM_AARCH64, "ARM AARCH64"),
+  ET( EM_AVR32, "Amtel 32-bit microprocessor"),
+  ET( EM_STM8	, "STMicroelectronics STM8"),
+  ET( EM_TILE64, "Tilera TILE64"),
+  ET( EM_TILEPRO, "Tilera TILEPro"),
+  ET( EM_MICROBLAZE, "Xilinx MicroBlaze"),
+  ET( EM_CUDA	, "NVIDIA CUDA"),
+  ET( EM_TILEGX, "Tilera TILE-Gx"),
+  ET( EM_CLOUDSHIELD, "CloudShield"),
+  ET( EM_COREA_1ST, "KIPO-KAIST Core-A 1st gen."),
+  ET( EM_COREA_2ND, "KIPO-KAIST Core-A 2nd gen."),
+  ET( EM_ARCV2, "Synopsys ARCv2 ISA. "),
+  ET( EM_OPEN8, "Open8 RISC"),
+  ET( EM_RL78	, "Renesas RL78"),
+  ET( EM_VIDEOCORE5, "Broadcom VideoCore V"),
+  ET( EM_78KOR, "Renesas 78KOR"),
+  ET( EM_56800EX, "Freescale 56800EX DSC"),
+  ET( EM_BA1	, "Beyond BA1"),
+  ET( EM_BA2	, "Beyond BA2"),
+  ET( EM_XCORE, "XMOS xCORE"),
+  ET( EM_MCHP_PIC, "Microchip 8-bit PIC(r)"),
+  ET( EM_INTELGT, "Intel Graphics Technology"),
+  ET( EM_KM32	, "KM211 KM32"),
+  ET( EM_KMX32, "KM211 KMX32"),
+  ET( EM_EMX16, "KM211 KMX16"),
+  ET( EM_EMX8	, "KM211 KMX8"),
+  ET( EM_KVARC, "KM211 KVARC"),
+  ET( EM_CDP	, "Paneve CDP"),
+  ET( EM_COGE	, "Cognitive Smart Memory Processor"),
+  ET( EM_COOL	, "Bluechip CoolEngine"),
+  ET( EM_NORC	, "Nanoradio Optimized RISC"),
+  ET( EM_CSR_KALIMBA, "CSR Kalimba"),
+  ET( EM_Z80	, "Zilog Z80"),
+  ET( EM_VISIUM, "Controls and Data Services VISIUMcore"),
+  ET( EM_FT32	, "FTDI Chip FT32"),
+  ET( EM_MOXIE, "Moxie processor"),
+  ET( EM_AMDGPU, "AMD GPU"),
+  ET( EM_RISCV, "RISC-V"),
+  ET( EM_BPF	, "Linux BPF -- in-kernel virtual machine"),
+  ET( EM_CSKY	    , "C-SKY"),
+  ET( EM_LOONGARCH, "LoongArch"),
+  ETNONE()
+};
+
 
 /* read only elf */
 struct _relf_struct
@@ -202,24 +387,68 @@ void relf_destroy(relf_struct *relf)
   close(relf->fd);  
 }
 
-void relf_show_value(elf_translate_struct *et, const char *variable, size_t n)
+void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n)
 {
-  printf("%s: [%lu, \"%s\", \"%s\"]\n", variable, n, et_get_macro(et, n), et_get_description(et, n));
+  printf("%s: [%zu, \"%s\", \"%s\"]", variable, n, et_get_macro(et, n), et_get_description(et, n));
 }
+
+void relf_show_pure_value(const char *variable, long long unsigned n)
+{
+  printf("%s: %llu", variable, n);
+}
+
+void relf_n()
+{
+  printf("\n");
+}
+
+void relf_c()
+{
+  printf(",");
+}
+
 
 void relf_show_elf_header(relf_struct *relf)
 {
   char *ident = elf_getident(relf->elf , NULL);
   // EI_OSABI
   // ident[EI_ABIVERSION]
-  relf_show_value(et_elf_class, "EI_CLASS", gelf_getclass( relf->elf ));
-  relf_show_value(et_elf_osabi, "EI_OSABI", ident[EI_OSABI]);
-  
-  
-  relf_show_value(et_e_type, "e_type", relf->elf_file_header.e_type );
-  
-  
-  
+  relf_show_et_value(et_elf_class, "EI_CLASS", gelf_getclass( relf->elf ));
+  relf_c(); relf_n();
+  relf_show_pure_value("EI_DATA", ident[EI_DATA]);
+  relf_c(); relf_n();
+  relf_show_pure_value("EI_VERSION", ident[EI_VERSION]);
+  relf_c(); relf_n();
+  relf_show_et_value(et_elf_osabi, "EI_OSABI", ident[EI_OSABI]);
+  relf_c(); relf_n();
+  relf_show_pure_value("EI_ABIVERSION", ident[EI_ABIVERSION]);
+  relf_c(); relf_n();
+  relf_show_et_value(et_e_type, "e_type", relf->elf_file_header.e_type );
+  relf_c(); relf_n();
+  relf_show_et_value(et_e_machine, "e_machine", relf->elf_file_header.e_machine );
+  relf_c(); relf_n();
+  relf_show_pure_value("e_version", relf->elf_file_header.e_version);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_entry", relf->elf_file_header.e_entry);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_phoff", relf->elf_file_header.e_phoff);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_shoff", relf->elf_file_header.e_shoff);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_flags", relf->elf_file_header.e_flags);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_ehsize", relf->elf_file_header.e_ehsize);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_phentsize", relf->elf_file_header.e_phentsize);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_phnum", relf->elf_file_header.e_phnum);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_shentsize", relf->elf_file_header.e_shentsize);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_shnum", relf->elf_file_header.e_shnum);
+  relf_c(); relf_n();
+  relf_show_pure_value("e_shstrndx", relf->elf_file_header.e_shstrndx);
+  relf_n();
 }
 
 int relf_show_sections(relf_struct *relf)
