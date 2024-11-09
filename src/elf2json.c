@@ -260,6 +260,68 @@ elf_translate_struct et_e_machine[] = {
 };
 
 
+elf_translate_struct et_sh_type[] = {
+  ET(SHT_NULL, "Section header table entry unused"),
+  ET(SHT_PROGBITS	, "Program data"),
+  ET(SHT_SYMTAB, "Symbol table"),
+  ET(SHT_STRTAB, "String table"),
+  ET(SHT_RELA	, "Relocation entries with addends"),
+  ET(SHT_HASH	 , "Symbol hash table"),
+  ET(SHT_DYNAMIC, "Dynamic linking information"),
+  ET(SHT_NOTE	, "Notes"),
+  ET(SHT_NOBITS, "Program space with no data (bss)"),
+  ET(SHT_REL, "Relocation entries, no addends"),
+  ET(SHT_SHLIB	, "Reserved"),
+  ET(SHT_DYNSYM, "Dynamic linker symbol table"),
+  ET(SHT_INIT_ARRAY	 , "Array of constructors"),
+  ET(SHT_FINI_ARRAY	 , "Array of destructors"),
+  ET(SHT_PREINIT_ARRAY, "Array of pre-constructors"),
+  ET(SHT_GROUP, "Section group"),
+  ET(SHT_SYMTAB_SHNDX , "Extended section indices"),
+  ET(SHT_RELR, "RELR relative relocations"),
+  ETNONE()
+};
+
+
+elf_translate_struct et_sh_flags[] = {
+  ET(SHF_WRITE, "Writable"),
+  ET(SHF_ALLOC, "Occupies memory during execution"),
+  ET(SHF_EXECINSTR, "Executable"),
+  ET(SHF_MERGE, "Might be merged"),
+  ET(SHF_STRINGS, "Contains nul-terminated strings"),
+  ET(SHF_INFO_LINK, "`sh_info' contains SHT index"),
+  ET(SHF_LINK_ORDER, "Preserve order after combining"),
+  ET(SHF_OS_NONCONFORMING, "Non-standard OS specific handling required"),
+  ET(SHF_GROUP, "Section is member of a group. "),
+  ET(SHF_TLS, "Section hold thread-local data. "),
+  ET(SHF_COMPRESSED, "Section with compressed data."),
+  ETNONE()
+};
+
+elf_translate_struct et_st_bind[] = {
+  ET(STB_LOCAL, "Local symbol"),
+  ET(STB_GLOBAL, "Global symbol"),
+  ET(STB_WEAK, "Weak symbol"),
+  ET(STB_NUM, "Number of defined types."),
+  ET(STB_GNU_UNIQUE, "Unique symbol."),
+  ETNONE()
+};
+
+elf_translate_struct et_st_type[] = {
+  ET(STT_NOTYPE, "Symbol type is unspecified"),
+  ET(STT_OBJECT, "Symbol is a data object"),
+  ET(STT_FUNC, "Symbol is a code object"),
+  ET(STT_SECTION, "Symbol associated with a section"),
+  ET(STT_FILE, "Symbol's name is file name"),
+  ET(STT_COMMON, "Symbol is a common data object"),
+  ET(STT_TLS, "Symbol is thread-local data object"),
+  ET(STT_NUM, "Number of defined types. "),
+  ET(STT_GNU_IFUNC, "Symbol is indirect code object"),
+  ETNONE()
+};
+
+
+
 /* read only elf */
 struct _relf_struct
 {
@@ -387,6 +449,33 @@ void relf_destroy(relf_struct *relf)
   close(relf->fd);  
 }
 
+
+
+void relf_show_flag_list(elf_translate_struct *et, size_t flags)
+{
+  int is_first = 1;
+  size_t i = 0;
+  printf("[");
+  for(;;)
+  {
+    if ( et[i].m == NULL )
+      break;
+    if ( (et[i].n & flags) != 0 )
+    {
+      if ( is_first )   
+        is_first = 0;
+      else
+        printf(", ");
+      printf( "\"%s\"", et[i].m);
+    }
+    i++;
+  }
+  printf("]");
+}
+
+
+
+
 void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n)
 {
   printf("%s: [%zu, \"%s\", \"%s\"]", variable, n, et_get_macro(et, n), et_get_description(et, n));
@@ -395,6 +484,18 @@ void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n
 void relf_show_pure_value(const char *variable, long long unsigned n)
 {
   printf("%s: %llu", variable, n);
+}
+
+void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, long long unsigned n)
+{
+  printf("%s: [%llu, ", variable, n);
+  relf_show_flag_list(et, n);
+  printf("]");
+}
+
+void relf_show_string_value(const char *variable, const char *value)
+{
+  printf("%s: \"%s\"", variable, value);
 }
 
 void relf_n()
@@ -451,21 +552,58 @@ void relf_show_elf_header(relf_struct *relf)
   relf_n();
 }
 
-int relf_show_sections(relf_struct *relf)
+int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 {
-  Elf_Scn  *scn;        // section descriptor
   GElf_Shdr shdr;
   const char *section_name;
-  /* loop over all sections */
-  scn = NULL;
-  while (( scn = elf_nextscn(relf->elf, scn)) != NULL ) 
-  {
     if ( gelf_getshdr( scn, &shdr ) != &shdr )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
     section_name = elf_strptr(relf->elf, relf->section_header_string_table_index, shdr.sh_name );
     if ( section_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
-    printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
+
+  relf_show_string_value("sh_name", section_name);
+  relf_c(); relf_n();
+  relf_show_et_value(et_sh_type, "sh_type", shdr.sh_type);
+  relf_c(); relf_n();
+  relf_show_flag_value_list(et_sh_flags, "sh_flags", shdr.sh_flags);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_addr", shdr.sh_addr);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_offset", shdr.sh_offset);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_size", shdr.sh_size);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_link", shdr.sh_link);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_info", shdr.sh_info);
+  relf_c(); relf_n();
+
+  relf_show_et_value(et_st_bind, "ST_BIND", GELF_ST_BIND(shdr.sh_info));
+  relf_c(); relf_n();
+  relf_show_et_value(et_st_type, "ST_TYPE", GELF_ST_TYPE(shdr.sh_info));
+  relf_c(); relf_n();
+    
+    
+  relf_show_pure_value("sh_addralign", shdr.sh_addralign);
+  relf_c(); relf_n();
+  relf_show_pure_value("sh_entsize", shdr.sh_entsize);
+  relf_c(); relf_n();
+    
+  printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
+  return 1;
+}
+
+int relf_show_section_list(relf_struct *relf)
+{
+  Elf_Scn  *scn;        // section descriptor
+  /* loop over all sections */
+  scn = elf_nextscn(relf->elf, NULL);
+  while ( scn != NULL ) 
+  {
+    if ( relf_show_section(relf, scn) == 0 )
+      return 0;
+    scn = elf_nextscn(relf->elf, scn);
   }
   return 1;
 }
@@ -479,7 +617,7 @@ int main( int argc , char ** argv )
   
   relf_init(&relf, argv[1]);
   relf_show_elf_header(&relf);
-  relf_show_sections(&relf);
+  relf_show_section_list(&relf);
   relf_destroy(&relf);
 }
 
