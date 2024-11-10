@@ -321,6 +321,39 @@ elf_translate_struct et_st_type[] = {
 };
 
 
+elf_translate_struct et_d_type[] = {
+  ET(ELF_T_BYTE,                   "unsigned char"),
+  ET(ELF_T_ADDR,                   "Elf32_Addr, Elf64_Addr, ..."),
+  ET(ELF_T_DYN,                    "Dynamic section record. "),
+  ET(ELF_T_EHDR,                   "ELF header. "),
+  ET(ELF_T_HALF,                   "Elf32_Half, Elf64_Half, ..."),
+  ET(ELF_T_OFF,                    "Elf32_Off, Elf64_Off, ..."),
+  ET(ELF_T_PHDR,                   "Program header. "),
+  ET(ELF_T_RELA,                   "Relocation entry with addend. "),
+  ET(ELF_T_REL,                    "Relocation entry. "),
+  ET(ELF_T_SHDR,                   "Section header. "),
+  ET(ELF_T_SWORD,                  "Elf32_Sword, Elf64_Sword, ..."),
+  ET(ELF_T_SYM,                    "Symbol record. "),
+  ET(ELF_T_WORD,                   "Elf32_Word, Elf64_Word, ..."),
+  ET(ELF_T_XWORD,                  "Elf32_Xword, Elf64_Xword, ..."),
+  ET(ELF_T_SXWORD,                 "Elf32_Sxword, Elf64_Sxword, ..."),
+  ET(ELF_T_VDEF,                   "Elf32_Verdef, Elf64_Verdef, ..."),
+  ET(ELF_T_VDAUX,                  "Elf32_Verdaux, Elf64_Verdaux, ..."),
+  ET(ELF_T_VNEED,                  "Elf32_Verneed, Elf64_Verneed, ..."),
+  ET(ELF_T_VNAUX,                  "Elf32_Vernaux, Elf64_Vernaux, ..."),
+  ET(ELF_T_NHDR,                   "Elf32_Nhdr, Elf64_Nhdr, ..."),
+  ET(ELF_T_SYMINFO,		"Elf32_Syminfo, Elf64_Syminfo, ..."),
+  ET(ELF_T_MOVE,			"Elf32_Move, Elf64_Move, ..."),
+  ET(ELF_T_LIB,			"Elf32_Lib, Elf64_Lib, ..."),
+  ET(ELF_T_GNUHASH,		"GNU-style hash section. "),
+  ET(ELF_T_AUXV,			"Elf32_auxv_t, Elf64_auxv_t, ..."),
+  ET(ELF_T_CHDR,			"Compressed, Elf32_Chdr, Elf64_Chdr, ..."),
+  ET(ELF_T_NHDR8,			"Special GNU Properties note.  Same as Nhdr, except padding."),
+  ET(ELF_T_RELR,			"Relative relocation entry."),
+  ETNONE()
+};
+
+
 
 /* read only elf */
 struct _relf_struct
@@ -619,6 +652,50 @@ void relf_show_elf_header(relf_struct *relf)
   relf_show_pure_value("strtab_section_index", relf->strtab_section_index);
 }
 
+int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
+{
+  GElf_Shdr shdr;
+  long long unsigned data_cnt = 0;
+  Elf_Data *data = NULL;
+  int is_first;
+
+  if ( gelf_getshdr( scn, &shdr ) != &shdr )
+    return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+  
+  relf_member("data_list");
+  relf_oa();
+  for(;;)
+  {
+    if ( data_cnt >= shdr.sh_size )
+      break;
+    
+    data = elf_getdata(scn , data);
+    if ( data == NULL )
+      break;
+    
+    if ( is_first ) 
+      is_first = 0;
+    else
+      relf_cn();
+    relf_oo();
+    
+    relf_show_et_value(et_d_type, "d_type", data->d_type);
+    relf_cn();
+    relf_show_pure_value("d_size", data->d_size);
+    relf_cn();
+    relf_show_pure_value("d_off", data->d_off);
+    relf_cn();
+    relf_show_pure_value("d_align", data->d_align);
+    //printf("  Data block type=%lu size=%lu off=%lu\n", (unsigned long)data->d_type, (unsigned long)data->d_size, (unsigned long)data->d_off);
+    
+    data_cnt += data->d_size;
+    relf_co();
+  } // data (within section) loop
+  relf_n();
+  relf_ca();
+  return 1;
+}
+
 int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 {
   GElf_Shdr shdr;
@@ -664,8 +741,12 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_show_pure_value("sh_addralign", shdr.sh_addralign);
   relf_cn();
   relf_show_pure_value("sh_entsize", shdr.sh_entsize);
+  relf_cn();
   
   
+  relf_show_data_list(relf, scn);
+  
+  relf_n();
   relf_co();
 
     
