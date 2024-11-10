@@ -335,7 +335,7 @@ struct _relf_struct
   GElf_Ehdr elf_file_header;                    // ehdr elf file header
   GElf_Shdr section_header;                     // shdr section header
   
-  size_t strtab_section_header_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab
+  size_t strtab_section_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab
 };
 typedef struct _relf_struct relf_struct;
 
@@ -377,6 +377,37 @@ const char *et_get_description(elf_translate_struct *et, size_t n)
   return "";
 }
 
+// returns NULL if not found
+Elf_Scn *relf_find_scn_by_name(relf_struct *relf, const char *name)
+{
+  Elf_Scn  *scn;        // section descriptor
+  GElf_Shdr shdr;
+  const char *section_name;
+  /* loop over all sections */
+  scn = elf_nextscn(relf->elf, NULL);
+  while ( scn != NULL ) 
+  {
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+        return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
+    section_name = elf_strptr(relf->elf, relf->section_header_string_table_index, shdr.sh_name );
+    if ( section_name == NULL )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
+    if ( strcmp(section_name, name) == 0 )
+      return scn;
+    scn = elf_nextscn(relf->elf, scn);
+  }
+  return NULL; /* section not found */
+}
+
+// returns 0 if not found
+size_t relf_find_section_index_by_name(relf_struct *relf, const char *name)
+{
+  Elf_Scn *scn = relf_find_scn_by_name(relf, name);
+  if ( scn == NULL )
+    return 0;
+  return elf_ndxscn( scn );
+}
+
 int relf_init(relf_struct *relf, const char *elf_filename)
 {
   memset(relf, 0, sizeof(relf_struct));
@@ -399,6 +430,8 @@ int relf_init(relf_struct *relf, const char *elf_filename)
             {
               if ( elf_getphdrnum(relf->elf, &(relf->program_header_total) ) == 0 )
               {
+                relf->strtab_section_index = relf_find_section_index_by_name(relf, ".strtab"); 
+                
                 return 1;
               }
               else
@@ -549,6 +582,8 @@ void relf_show_elf_header(relf_struct *relf)
   relf_show_pure_value("e_shnum", relf->elf_file_header.e_shnum);
   relf_c(); relf_n();
   relf_show_pure_value("e_shstrndx", relf->elf_file_header.e_shstrndx);
+  relf_c(); relf_n();
+  relf_show_pure_value("strtab_section_index", relf->strtab_section_index);
   relf_n();
 }
 
@@ -562,6 +597,14 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
     if ( section_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
+  /* 
+      output the section index, the index is used by 
+        char *elf_strptr (Elf *__elf, size_t __index, size_t __offset)
+        Elf_Scn *elf_getscn (Elf *__elf, size_t __index);
+  */
+  relf_show_pure_value("section_index", (long long unsigned)elf_ndxscn(scn));   // get the "official" section index
+  relf_c(); relf_n();
+    
   relf_show_string_value("sh_name", section_name);
   relf_c(); relf_n();
   relf_show_et_value(et_sh_type, "sh_type", shdr.sh_type);
@@ -593,6 +636,7 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
   return 1;
 }
+
 
 int relf_show_section_list(relf_struct *relf)
 {
