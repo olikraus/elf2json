@@ -507,28 +507,34 @@ void relf_show_flag_list(elf_translate_struct *et, size_t flags)
 }
 
 
-
+void relf_member(const char *s)
+{
+  printf("\"%s\":", s);
+}
 
 void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n)
 {
-  printf("%s: [%zu, \"%s\", \"%s\"]", variable, n, et_get_macro(et, n), et_get_description(et, n));
+  relf_member(variable);
+  printf("[%zu, \"%s\", \"%s\"]", n, et_get_macro(et, n), et_get_description(et, n));
 }
 
 void relf_show_pure_value(const char *variable, long long unsigned n)
 {
-  printf("%s: %llu", variable, n);
+  relf_member(variable);
+  printf("%llu", n);
 }
 
 void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, long long unsigned n)
 {
-  printf("%s: [%llu, ", variable, n);
+  relf_member(variable);
+  printf("[%llu, ", n);
   relf_show_flag_list(et, n);
   printf("]");
 }
 
 void relf_show_string_value(const char *variable, const char *value)
 {
-  printf("%s: \"%s\"", variable, value);
+  printf("\"%s\": \"%s\"", variable, value);
 }
 
 void relf_n()
@@ -541,6 +547,33 @@ void relf_c()
   printf(",");
 }
 
+void relf_cn()
+{
+  relf_c();
+  relf_n();
+}
+
+void relf_oo()  // open object
+{
+  printf("{\n");
+}
+
+void relf_co()  // close object
+{
+  printf("}");
+}
+
+void relf_oa()  // open array
+{
+  printf("[\n");
+}
+
+void relf_ca()  // close array
+{
+  printf("]");
+}
+
+
 
 void relf_show_elf_header(relf_struct *relf)
 {
@@ -548,43 +581,42 @@ void relf_show_elf_header(relf_struct *relf)
   // EI_OSABI
   // ident[EI_ABIVERSION]
   relf_show_et_value(et_elf_class, "EI_CLASS", gelf_getclass( relf->elf ));
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("EI_DATA", ident[EI_DATA]);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("EI_VERSION", ident[EI_VERSION]);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_et_value(et_elf_osabi, "EI_OSABI", ident[EI_OSABI]);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("EI_ABIVERSION", ident[EI_ABIVERSION]);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_et_value(et_e_type, "e_type", relf->elf_file_header.e_type );
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_et_value(et_e_machine, "e_machine", relf->elf_file_header.e_machine );
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_version", relf->elf_file_header.e_version);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_entry", relf->elf_file_header.e_entry);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_phoff", relf->elf_file_header.e_phoff);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_shoff", relf->elf_file_header.e_shoff);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_flags", relf->elf_file_header.e_flags);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_ehsize", relf->elf_file_header.e_ehsize);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_phentsize", relf->elf_file_header.e_phentsize);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_phnum", relf->elf_file_header.e_phnum);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_shentsize", relf->elf_file_header.e_shentsize);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_shnum", relf->elf_file_header.e_shnum);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("e_shstrndx", relf->elf_file_header.e_shstrndx);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("strtab_section_index", relf->strtab_section_index);
-  relf_n();
 }
 
 int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
@@ -597,43 +629,47 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
     if ( section_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
+  relf_oo();
   /* 
       output the section index, the index is used by 
         char *elf_strptr (Elf *__elf, size_t __index, size_t __offset)
         Elf_Scn *elf_getscn (Elf *__elf, size_t __index);
   */
   relf_show_pure_value("section_index", (long long unsigned)elf_ndxscn(scn));   // get the "official" section index
-  relf_c(); relf_n();
+  relf_cn();
     
   relf_show_string_value("sh_name", section_name);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_et_value(et_sh_type, "sh_type", shdr.sh_type);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_flag_value_list(et_sh_flags, "sh_flags", shdr.sh_flags);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_addr", shdr.sh_addr);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_offset", shdr.sh_offset);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_size", shdr.sh_size);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_link", shdr.sh_link);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_info", shdr.sh_info);
-  relf_c(); relf_n();
+  relf_cn();
 
   relf_show_et_value(et_st_bind, "ST_BIND", GELF_ST_BIND(shdr.sh_info));
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_et_value(et_st_type, "ST_TYPE", GELF_ST_TYPE(shdr.sh_info));
-  relf_c(); relf_n();
+  relf_cn();
     
     
   relf_show_pure_value("sh_addralign", shdr.sh_addralign);
-  relf_c(); relf_n();
+  relf_cn();
   relf_show_pure_value("sh_entsize", shdr.sh_entsize);
-  relf_c(); relf_n();
+  
+  
+  relf_co();
+
     
-  printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
+  //printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
   return 1;
 }
 
@@ -641,14 +677,28 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 int relf_show_section_list(relf_struct *relf)
 {
   Elf_Scn  *scn;        // section descriptor
+  int is_first = 1;
   /* loop over all sections */
+  relf_member("section_list");
+  relf_oa();
   scn = elf_nextscn(relf->elf, NULL);
   while ( scn != NULL ) 
   {
+    if ( is_first )
+      is_first = 0;
+    else
+      relf_cn();
+      
     if ( relf_show_section(relf, scn) == 0 )
+    {
+      relf_ca();
+      relf_n();
       return 0;
+    }
     scn = elf_nextscn(relf->elf, scn);
   }
+  relf_ca();
+  relf_n();
   return 1;
 }
 
@@ -660,8 +710,14 @@ int main( int argc , char ** argv )
     return 0;
   
   relf_init(&relf, argv[1]);
+  relf_oo();
   relf_show_elf_header(&relf);
+  relf_cn();
+  
   relf_show_section_list(&relf);
+  relf_co();
+  relf_n();
+  
   relf_destroy(&relf);
 }
 
