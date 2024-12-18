@@ -545,6 +545,12 @@ void relf_member(const char *s)
   printf("\"%s\":", s);
 }
 
+/*
+  Show the value of a variable
+  The value is a number with a C-definition and a description.
+  This triple (number, c-def and description) is stored in the 
+  elements of the 'elf_translate_struct' array (first arg)
+*/
 void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n)
 {
   relf_member(variable);
@@ -568,6 +574,15 @@ void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, l
 void relf_show_string_value(const char *variable, const char *value)
 {
   printf("\"%s\": \"%s\"", variable, value);
+}
+
+void relf_indent(int n)
+{
+  while( n > 0 )
+  {
+    printf("    ");
+    n--;
+  }
 }
 
 void relf_n()
@@ -610,50 +625,71 @@ void relf_ca()  // close array
 
 void relf_show_elf_header(relf_struct *relf)
 {
+  int indent = 1;
   char *ident = elf_getident(relf->elf , NULL);
   // EI_OSABI
   // ident[EI_ABIVERSION]
+  relf_indent(indent);
   relf_show_et_value(et_elf_class, "EI_CLASS", gelf_getclass( relf->elf ));
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("EI_DATA", ident[EI_DATA]);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("EI_VERSION", ident[EI_VERSION]);
   relf_cn();
+  relf_indent(indent);
   relf_show_et_value(et_elf_osabi, "EI_OSABI", ident[EI_OSABI]);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("EI_ABIVERSION", ident[EI_ABIVERSION]);
   relf_cn();
+  relf_indent(indent);
   relf_show_et_value(et_e_type, "e_type", relf->elf_file_header.e_type );
   relf_cn();
+  relf_indent(indent);
   relf_show_et_value(et_e_machine, "e_machine", relf->elf_file_header.e_machine );
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_version", relf->elf_file_header.e_version);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_entry", relf->elf_file_header.e_entry);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_phoff", relf->elf_file_header.e_phoff);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_shoff", relf->elf_file_header.e_shoff);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_flags", relf->elf_file_header.e_flags);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_ehsize", relf->elf_file_header.e_ehsize);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_phentsize", relf->elf_file_header.e_phentsize);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_phnum", relf->elf_file_header.e_phnum);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_shentsize", relf->elf_file_header.e_shentsize);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_shnum", relf->elf_file_header.e_shnum);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("e_shstrndx", relf->elf_file_header.e_shstrndx);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("strtab_section_index", relf->strtab_section_index);
 }
 
 int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
 {
+  int indent = 4;
   GElf_Shdr shdr;
   long long unsigned data_cnt = 0;
   Elf_Data *data = NULL;
@@ -662,8 +698,11 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
   if ( gelf_getshdr( scn, &shdr ) != &shdr )
     return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
   
+  relf_indent(indent-1);
   relf_member("data_list");
-  relf_oa();
+  relf_n();
+  relf_indent(indent-1);
+  relf_oa();    // open array
   for(;;)
   {
     if ( data_cnt >= shdr.sh_size )
@@ -677,27 +716,36 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
       is_first = 0;
     else
       relf_cn();
+    relf_indent(indent);
     relf_oo();
     
+    relf_indent(indent+1);
     relf_show_et_value(et_d_type, "d_type", data->d_type);
     relf_cn();
+    relf_indent(indent+1);
     relf_show_pure_value("d_size", data->d_size);
     relf_cn();
+    relf_indent(indent+1);
     relf_show_pure_value("d_off", data->d_off);
     relf_cn();
+    relf_indent(indent+1);
     relf_show_pure_value("d_align", data->d_align);
     //printf("  Data block type=%lu size=%lu off=%lu\n", (unsigned long)data->d_type, (unsigned long)data->d_size, (unsigned long)data->d_off);
     
     data_cnt += data->d_size;
+    relf_n();
+    relf_indent(indent);
     relf_co();
   } // data (within section) loop
   relf_n();
-  relf_ca();
+  relf_indent(indent-1);
+  relf_ca(); // close array
   return 1;
 }
 
 int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 {
+  int indent = 3;
   GElf_Shdr shdr;
   const char *section_name;
     if ( gelf_getshdr( scn, &shdr ) != &shdr )
@@ -706,40 +754,54 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
     if ( section_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
+  relf_indent(indent-1);
   relf_oo();
   /* 
       output the section index, the index is used by 
         char *elf_strptr (Elf *__elf, size_t __index, size_t __offset)
         Elf_Scn *elf_getscn (Elf *__elf, size_t __index);
   */
+  relf_indent(indent);
   relf_show_pure_value("section_index", (long long unsigned)elf_ndxscn(scn));   // get the "official" section index
   relf_cn();
     
+  relf_indent(indent);
   relf_show_string_value("sh_name", section_name);
   relf_cn();
+  relf_indent(indent);
   relf_show_et_value(et_sh_type, "sh_type", shdr.sh_type);
   relf_cn();
+  relf_indent(indent);
   relf_show_flag_value_list(et_sh_flags, "sh_flags", shdr.sh_flags);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_addr", shdr.sh_addr);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_offset", shdr.sh_offset);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_size", shdr.sh_size);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_link", shdr.sh_link);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_info", shdr.sh_info);
   relf_cn();
 
+  relf_indent(indent);
   relf_show_et_value(et_st_bind, "ST_BIND", GELF_ST_BIND(shdr.sh_info));
   relf_cn();
+  relf_indent(indent);
   relf_show_et_value(et_st_type, "ST_TYPE", GELF_ST_TYPE(shdr.sh_info));
   relf_cn();
     
     
+  relf_indent(indent);
   relf_show_pure_value("sh_addralign", shdr.sh_addralign);
   relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("sh_entsize", shdr.sh_entsize);
   relf_cn();
   
@@ -747,9 +809,8 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_show_data_list(relf, scn);
   
   relf_n();
-  relf_co();
-
-    
+  relf_indent(indent-1);
+  relf_co();    // close object
   //printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
   return 1;
 }
@@ -757,18 +818,22 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 
 int relf_show_section_list(relf_struct *relf)
 {
+  int indent = 1;
   Elf_Scn  *scn;        // section descriptor
   int is_first = 1;
   /* loop over all sections */
+  relf_indent(indent);
   relf_member("section_list");
-  relf_oa();
+  relf_n();
+  relf_indent(indent);
+  relf_oa();            // open array
   scn = elf_nextscn(relf->elf, NULL);
   while ( scn != NULL ) 
-  {
+    {
     if ( is_first )
       is_first = 0;
     else
-      relf_cn();
+      relf_cn();                // comma + new line
       
     if ( relf_show_section(relf, scn) == 0 )
     {
@@ -778,7 +843,9 @@ int relf_show_section_list(relf_struct *relf)
     }
     scn = elf_nextscn(relf->elf, scn);
   }
-  relf_ca();
+  relf_n();
+  relf_indent(indent);
+  relf_ca();    // close array
   relf_n();
   return 1;
 }

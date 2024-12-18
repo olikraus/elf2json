@@ -17,6 +17,8 @@ https://man7.org/linux/man-pages/man5/elf.5.html
 
 ELF man pages: https://docs.oracle.com/cd/E19253-01/816-5172/6mbb7btor/index.html
 
+Alternative Tool: https://github.com/m4b/elf2json
+
 ## Background
 
 This tool will use libelf, which is based on `elf.h` types.
