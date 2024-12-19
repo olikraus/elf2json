@@ -298,6 +298,7 @@ elf_translate_struct et_sh_flags[] = {
   ETNONE()
 };
 
+/* GELF_ST_TYPE(st_bind) */
 elf_translate_struct et_st_bind[] = {
   ET(STB_LOCAL, "Local symbol"),
   ET(STB_GLOBAL, "Global symbol"),
@@ -307,6 +308,7 @@ elf_translate_struct et_st_bind[] = {
   ETNONE()
 };
 
+/* GELF_ST_TYPE(st_info) */
 elf_translate_struct et_st_type[] = {
   ET(STT_NOTYPE, "Symbol type is unspecified"),
   ET(STT_OBJECT, "Symbol is a data object"),
@@ -320,20 +322,29 @@ elf_translate_struct et_st_type[] = {
   ETNONE()
 };
 
-
+/* GELF_ST_VISIBILITY(st_other) */
+elf_translate_struct et_st_visibility[] = {
+  ET(STV_DEFAULT, "Default symbol visibility rules"),
+  ET(STV_INTERNAL, "Processor specific hidden class"),
+  ET(STV_HIDDEN, "Sym unavailable in other modules"),
+  ET(STV_PROTECTED, "Not preemptible, not exported"),
+  ETNONE()
+};
+  
+/* d_type member of the Elf_Data struct (libelf.h) */
 elf_translate_struct et_d_type[] = {
   ET(ELF_T_BYTE,                   "unsigned char"),
   ET(ELF_T_ADDR,                   "Elf32_Addr, Elf64_Addr, ..."),
-  ET(ELF_T_DYN,                    "Dynamic section record. "),
-  ET(ELF_T_EHDR,                   "ELF header. "),
+  ET(ELF_T_DYN,                    "Dynamic section record."),
+  ET(ELF_T_EHDR,                   "ELF header."),
   ET(ELF_T_HALF,                   "Elf32_Half, Elf64_Half, ..."),
   ET(ELF_T_OFF,                    "Elf32_Off, Elf64_Off, ..."),
-  ET(ELF_T_PHDR,                   "Program header. "),
-  ET(ELF_T_RELA,                   "Relocation entry with addend. "),
-  ET(ELF_T_REL,                    "Relocation entry. "),
-  ET(ELF_T_SHDR,                   "Section header. "),
+  ET(ELF_T_PHDR,                   "Program header."),
+  ET(ELF_T_RELA,                   "Relocation entry with addend."),
+  ET(ELF_T_REL,                    "Relocation entry."),
+  ET(ELF_T_SHDR,                   "Section header."),
   ET(ELF_T_SWORD,                  "Elf32_Sword, Elf64_Sword, ..."),
-  ET(ELF_T_SYM,                    "Symbol record. "),
+  ET(ELF_T_SYM,                    "Symbol record."),
   ET(ELF_T_WORD,                   "Elf32_Word, Elf64_Word, ..."),
   ET(ELF_T_XWORD,                  "Elf32_Xword, Elf64_Xword, ..."),
   ET(ELF_T_SXWORD,                 "Elf32_Sxword, Elf64_Sxword, ..."),
@@ -353,6 +364,48 @@ elf_translate_struct et_d_type[] = {
   ETNONE()
 };
 
+/* d_tag member of Elf64_Dyn */
+elf_translate_struct et_d_tag[] = {
+  ET(  DT_NULL		        , "Marks end of dynamic section"),
+  ET(  DT_NEEDED	        , "Name of needed library"),      // string table offset
+  ET(  DT_PLTRELSZ	        , "Size in bytes of PLT relocs"),
+  ET(  DT_PLTGOT	        , "Processor defined value"),
+  ET(  DT_HASH	        , "Address of symbol hash table"),
+  ET(  DT_STRTAB	        , "Address of string table"),
+  ET(  DT_SYMTAB	        , "Address of symbol table"),
+  ET(  DT_RELA		        , "Address of Rela relocs"),
+  ET(  DT_RELASZ	        , "Total size of Rela relocs"),
+  ET(  DT_RELAENT	        , "Size of one Rela reloc"),
+  ET(  DT_STRSZ	        , "Size of string table"),
+  ET(  DT_SYMENT	        , "Size of one symbol table entry"),
+  ET(  DT_INIT		        , "Address of init function"),
+  ET(  DT_FINI		        , "Address of termination function"),
+  ET(  DT_SONAME	        , "Name of shared object"),
+  ET(  DT_RPATH	        , "Library search path (deprecated)"),
+  ET(  DT_SYMBOLIC	        , "Start symbol search here"),
+  ET(  DT_REL		        , "Address of Rel relocs"),
+  ET(  DT_RELSZ	        , "Total size of Rel relocs"),
+  ET(  DT_RELENT	        , "Size of one Rel reloc"),
+  ET(  DT_PLTREL	        , "Type of reloc in PLT"),
+  ET(  DT_DEBUG	        , "For debugging; unspecified"),
+  ET(  DT_TEXTREL	        , "Reloc might modify .text"),
+  ET(  DT_JMPREL	        , "Address of PLT relocs"),
+  ET(  DT_BIND_NOW	, "Process relocations of object"),
+  ET(  DT_INIT_ARRAY	, "Array with addresses of init fct"),
+  ET(  DT_FINI_ARRAY	, "Array with addresses of fini fct"),
+  ET(  DT_INIT_ARRAYSZ	, "Size in bytes of DT_INIT_ARRAY"),
+  ET(  DT_FINI_ARRAYSZ	, "Size in bytes of DT_FINI_ARRAY"),
+  ET(  DT_RUNPATH	        , "Library search path"),
+  ET(  DT_FLAGS	        , "Flags for the object being loaded"),
+  ET(  DT_ENCODING	, "Start of encoded range"),
+  ET(  DT_PREINIT_ARRAY , "Array with addresses of preinit fct"),
+  ET(  DT_PREINIT_ARRAYSZ , "size in bytes of DT_PREINIT_ARRAY"),
+  ET(  DT_SYMTAB_SHNDX , "Address of SYMTAB_SHNDX section"),
+  ET(  DT_RELRSZ	        , "Total size of RELR relative relocations"),
+  ET(  DT_RELR		        , "Address of RELR relative relocations"),
+  ET(  DT_RELRENT	        , "Size of one RELR relative relocaction"),
+  ETNONE()
+};
 
 
 /* read only elf */
@@ -709,13 +762,226 @@ void relf_show_elf_header(relf_struct *relf)
   relf_show_pure_value("dynstr_section_index", relf->dynstr_section_index);
 }
 
-int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
+int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
+{
+  int i = 0;
+  
+  /*
+    GElf_Sym contains the following members:  
+      st_name;		Symbol name (string tbl index) 
+      st_value;		Symbol value 
+      st_size;		Symbol size
+      st_info;		Symbol type and binding         GELF_ST_BIND(st_info), GELF_ST_TYPE(st_info)
+      st_other;		Symbol visibility               GELF_ST_VISIBILITY(st_other)
+      st_shndx;		Section index
+                                    https://refspecs.linuxbase.org/elf/gabi4+/ch4.symtab.html
+                                    Every symbol table entry is defined in relation to some section.
+                                    This member holds the relevant section header table index. 
+                                    As the sh_link and sh_info interpretation table and the related text describe, some section indexes indicate special meanings.
+                                    If this member contains SHN_XINDEX, then the actual section header index is too large to fit in this field. 
+                                    The actual value is contained in the associated section of type SHT_SYMTAB_SHNDX.   
+  
+                                    The interpretation of the st_value field depends on the st_shndx value:
+                                    SHN_UNDEF	        0x0000          Undefined section 
+                                        This section table index means the symbol is undefined. 
+                                        When the link editor combines this object file with another that defines the indicated symbol, this file's references to the symbol will be linked to the actual definition. 
+                                    SHN_ABS		0xfff1	        Associated symbol is absolute
+                                        The symbol has an absolute value that will not change because of relocation. 
+                                    SHN_COMMON	0xfff2		Associated symbol is common
+                                        The symbol labels a common block that has not yet been allocated. 
+                                        The symbol's value gives alignment constraints, similar to a section's sh_addralign member. 
+                                        The link editor will allocate the storage for the symbol at an address that is a multiple of st_value. 
+                                        The symbol's size tells how many bytes are required. Symbols with section index SHN_COMMON may appear only in relocatable objects. 
+                                    SHN_XINDEX	        0xffff		Index is in extra table.
+                                        This value is an escape value. 
+                                        It indicates that the symbol refers to a specific location within a section, 
+                                        but that the section header index for that section is too large to be represented directly in the symbol table entry. 
+                                        The actual section header index is found in the associated SHT_SYMTAB_SHNDX section. 
+                                        The entries in that section correspond one to one with the entries in the symbol table. 
+                                        Only those entries in SHT_SYMTAB_SHNDX that correspond to symbol table entries with SHN_XINDEX will hold valid section header indexes; all other entries will have value 0. 
+
+  
+  */
+  GElf_Sym symbol;
+  
+  int indent = 6;
+  int is_first = 1;
+  const char *symbol_name;
+
+
+  relf_cn();
+  relf_indent(indent-1);
+  relf_member("symbol_list");
+  relf_n();
+  relf_indent(indent-1);
+  relf_oa();    // open array
+
+  
+  /*
+    There is no function to get the total number of symbols, so start with index zero and loop
+    until gelf_getsym() returns an error,
+  
+    Note: It seems that then total number is equal to the data block sized / sizeof(symbol struct), 
+      but sizeof(symbol struct) depends on the type of the elf file (32 or 64 bit).
+      
+    if st_shndx has the value SHN_XINDEX then
+     GElf_Sym *gelf_getsymshndx(Elf_Data *symdata, Elf_Data *xndxdata, int ndx, GElf_Sym *sym, Elf32_Word *xndxptr);
+    will calculate the correct section index in xndxptr. xndxdata must be a section of type SHT_SYMTAB_SHNDX
+  */
+  while( gelf_getsym(data, i, &symbol) != NULL )
+  {
+    if ( is_first ) 
+      is_first = 0;
+    else
+      relf_cn();
+
+    symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, symbol.st_name );
+    if ( symbol_name == NULL )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+
+    
+    relf_indent(indent);
+    relf_oo();
+
+    relf_indent(indent+1);
+    relf_show_string_value("st_name", symbol_name);
+    relf_cn();    
+
+    relf_indent(indent+1);
+    relf_show_pure_value("st_value", symbol.st_value);
+    relf_cn();    
+    relf_indent(indent+1);
+    relf_show_pure_value("st_size", symbol.st_size);
+    relf_cn();    
+    relf_indent(indent+1);
+    relf_show_pure_value("st_shndx", symbol.st_shndx);
+    relf_cn();    
+
+    relf_indent(indent+1);
+    relf_show_pure_value("st_info", symbol.st_info);
+    relf_cn();    
+    relf_indent(indent+1);
+    relf_show_et_value(et_st_bind, "ST_BIND", GELF_ST_BIND(symbol.st_info));
+    relf_cn();
+    relf_indent(indent+1);
+    relf_show_et_value(et_st_type, "ST_TYPE", GELF_ST_TYPE(symbol.st_info));
+    relf_cn();
+    relf_indent(indent+1);
+    relf_show_pure_value("st_other", symbol.st_other);
+    relf_cn();    
+    relf_indent(indent+1);
+    relf_show_et_value(et_st_visibility, "ST_VISIBILITY", GELF_ST_VISIBILITY(symbol.st_other));
+    //relf_cn();
+    
+    relf_n();
+    relf_indent(indent);
+    relf_co();
+    
+    
+    i++;
+  }
+  relf_n();
+  relf_indent(indent-1);
+  relf_ca(); // close array
+  return 1;
+}
+
+int relf_show_dyn_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data)
+{
+  int i = 0;
+/*
+      typedef struct
+      {
+        Elf64_Sxword	d_tag;			// Dynamic entry type
+        union
+          {
+            Elf64_Xword d_val;		// Integer value
+            Elf64_Addr d_ptr;			// Address value 
+          } d_un;
+      } Elf64_Dyn;
+*/
+  GElf_Dyn dynamic;
+  int indent = 6;
+  int is_first = 1;
+
+
+  relf_cn();
+  relf_indent(indent-1);
+  relf_member("dynamic_list");
+  relf_n();
+  relf_indent(indent-1);
+  relf_oa();    // open array
+  
+  /* extern GElf_Dyn *gelf_getdyn (Elf_Data *__data, int __ndx, GElf_Dyn *__dst); */
+  while( gelf_getdyn(data, i, &dynamic) != NULL )
+  {
+    if ( is_first ) 
+      is_first = 0;
+    else
+      relf_cn();
+    
+    relf_indent(indent);
+    relf_oo();
+    
+    relf_indent(indent+1);
+    relf_show_et_value(et_d_tag, "d_tag", dynamic.d_tag);
+    relf_cn();
+    relf_indent(indent+1);
+    relf_show_pure_value("d_val", dynamic.d_un.d_val);
+    
+    /*
+    relf_cn();
+    relf_indent(indent+1);
+    relf_show_pure_value("d_ptr", dynamic.d_un.d_ptr);
+    */
+ 
+    if ( dynamic.d_tag == DT_NEEDED )
+    {
+      relf_cn();
+      relf_indent(indent+1);
+      relf_show_string_value("lib_name", elf_strptr(relf->elf, relf->dynstr_section_index, dynamic.d_un.d_val ));
+    }
+    
+    relf_n();
+    relf_indent(indent);
+    relf_co();
+        
+    i++;
+  }
+  relf_n();
+  relf_indent(indent-1);
+  relf_ca(); // close array
+  return 1;
+}
+
+int relf_show_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
+{
+  switch(data->d_type)
+  {
+    case ELF_T_SYM:             // used by SHT_SYMTAB, SHT_DYNSYM
+      return relf_show_symbol_data(relf, scn, data, corresponding_section_string_table_index);
+    case ELF_T_DYN:             // used by SHT_DYNAMIC
+      return relf_show_dyn_data(relf, scn, data);
+    default:
+      return 1;
+  }
+  return 1;
+}
+
+/*
+  Show the list of data blocks for a given section.
+  Some sections have a corresponding string table.
+  If such a corresponding string table exists, then corresponding_section_string_table_index will contain that number.
+    Example is the index of ".strtab" for ".symtab", this means that if scn is ".symtab", 
+    then corresponding_section_string_table_index will contain the index of ".strtab"
+*/
+int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_section_string_table_index)
 {
   int indent = 4;
   GElf_Shdr shdr;
   long long unsigned data_cnt = 0;
   Elf_Data *data = NULL;
-  int is_first;
+  int is_first = 1;
 
   if ( gelf_getshdr( scn, &shdr ) != &shdr )
     return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
@@ -754,6 +1020,9 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
     relf_show_pure_value("d_align", data->d_align);
     //printf("  Data block type=%lu size=%lu off=%lu\n", (unsigned long)data->d_type, (unsigned long)data->d_size, (unsigned long)data->d_off);
     
+    relf_show_data(relf, scn, data, corresponding_section_string_table_index);
+    
+    
     data_cnt += data->d_size;
     relf_n();
     relf_indent(indent);
@@ -769,6 +1038,7 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
 {
   int indent = 3;
   GElf_Shdr shdr;
+  int section_string_table_index = 0;
   const char *section_name;
     if ( gelf_getshdr( scn, &shdr ) != &shdr )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
@@ -776,6 +1046,24 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
     if ( section_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
+  /*
+    some sections require a string table, for example
+      SHT_DYNSYM        requires a ".dynstr" section of type SHT_STRTAB
+      SHT_SYMTAB         requires a ".strtab" section of type SHT_STRTAB
+    This is checked here and assigned to section_string_table_index.
+    The string table index is then passed to the show data procedure
+  */
+  switch (shdr.sh_type)
+  {
+    case SHT_DYNSYM:
+      section_string_table_index = relf->dynstr_section_index;
+      break;
+    case SHT_SYMTAB:
+      section_string_table_index = relf->strtab_section_index;
+      break;
+  }
+  
+    
   relf_indent(indent-1);
   relf_oo();
   /* 
@@ -813,14 +1101,6 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_cn();
 
   relf_indent(indent);
-  relf_show_et_value(et_st_bind, "ST_BIND", GELF_ST_BIND(shdr.sh_info));
-  relf_cn();
-  relf_indent(indent);
-  relf_show_et_value(et_st_type, "ST_TYPE", GELF_ST_TYPE(shdr.sh_info));
-  relf_cn();
-    
-    
-  relf_indent(indent);
   relf_show_pure_value("sh_addralign", shdr.sh_addralign);
   relf_cn();
   relf_indent(indent);
@@ -828,7 +1108,7 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_cn();
   
   
-  relf_show_data_list(relf, scn);
+  relf_show_data_list(relf, scn, section_string_table_index);
   
   relf_n();
   relf_indent(indent-1);
@@ -872,6 +1152,8 @@ int relf_show_section_list(relf_struct *relf)
   return 1;
 }
 
+int default_return_value = 1;
+
 int main( int argc , char ** argv )
 {
   relf_struct relf;
@@ -889,6 +1171,8 @@ int main( int argc , char ** argv )
   relf_n();
   
   relf_destroy(&relf);
+  
+  return default_return_value;
 }
 
 
