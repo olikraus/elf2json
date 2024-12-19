@@ -368,7 +368,12 @@ struct _relf_struct
   GElf_Ehdr elf_file_header;                    // ehdr elf file header
   GElf_Shdr section_header;                     // shdr section header
   
-  size_t strtab_section_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab
+  size_t symtab_section_index;             // section header index of the ".symtab" section, 0 if not found
+  size_t strtab_section_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab, 0 if not found
+  size_t dynsym_section_index;          // section header index of the ".dynsym" section, 0 if not found
+  size_t dynstr_section_index;          // section header index of the ".dynstr" section, 0 if not found
+  
+  
 };
 typedef struct _relf_struct relf_struct;
 
@@ -438,7 +443,7 @@ size_t relf_find_section_index_by_name(relf_struct *relf, const char *name)
   Elf_Scn *scn = relf_find_scn_by_name(relf, name);
   if ( scn == NULL )
     return 0;
-  return elf_ndxscn( scn );
+  return elf_ndxscn( scn ); // returns SHN_UNDEF in case of error, SHN_UNDEF is zero  (elf.h)
 }
 
 int relf_init(relf_struct *relf, const char *elf_filename)
@@ -463,7 +468,11 @@ int relf_init(relf_struct *relf, const char *elf_filename)
             {
               if ( elf_getphdrnum(relf->elf, &(relf->program_header_total) ) == 0 )
               {
+                /* section index is 0 if not found */
+                relf->symtab_section_index = relf_find_section_index_by_name(relf, ".symtab"); 
                 relf->strtab_section_index = relf_find_section_index_by_name(relf, ".strtab"); 
+                relf->dynsym_section_index = relf_find_section_index_by_name(relf, ".dynsym"); 
+                relf->dynstr_section_index = relf_find_section_index_by_name(relf, ".dynstr"); 
                 
                 return 1;
               }
@@ -682,9 +691,22 @@ void relf_show_elf_header(relf_struct *relf)
   relf_cn();
   relf_indent(indent);
   relf_show_pure_value("e_shstrndx", relf->elf_file_header.e_shstrndx);
+
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("symtab_section_index", relf->symtab_section_index);
+
   relf_cn();
   relf_indent(indent);
   relf_show_pure_value("strtab_section_index", relf->strtab_section_index);
+  
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("dynsym_section_index", relf->dynsym_section_index);
+
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("dynstr_section_index", relf->dynstr_section_index);
 }
 
 int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn)
