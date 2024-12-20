@@ -640,8 +640,8 @@ void relf_show_et_value(elf_translate_struct *et, const char *variable, size_t n
 
 void relf_show_pure_value(const char *variable, long long unsigned n)
 {
-  relf_member(variable);
-  printf("%llu", n);
+  relf_member(variable);  
+  printf("[%llu, \"0x%08llx\"]", n, n);
 }
 
 void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, long long unsigned n)
@@ -656,6 +656,23 @@ void relf_show_string_value(const char *variable, const char *value)
 {
   printf("\"%s\": \"%s\"", variable, value);
 }
+
+
+void relf_show_memory(const char *variable, unsigned char *ptr, size_t cnt)
+{
+  int i;
+  relf_member(variable);
+  printf("[");
+  for( i = 0; i < cnt; i++ )
+  {
+      if ( i > 0 )
+        printf(",");
+      printf("%u", (int)ptr[i]);
+  }
+  printf("]");
+}
+
+
 
 void relf_indent(int n)
 {
@@ -820,31 +837,25 @@ int relf_show_program_header(relf_struct *relf, GElf_Phdr *phdr)
   relf_indent(indent);
   relf_show_flag_value_list(et_phdr_flags, "p_flags", phdr->p_flags);
   relf_cn();
-  
-  /*
-  relf_indent(indent);
-  relf_show_pure_value("sh_addr", shdr.sh_addr);
-  relf_cn();
-  relf_indent(indent);
-  relf_show_pure_value("sh_offset", shdr.sh_offset);
-  relf_cn();
-  relf_indent(indent);
-  relf_show_pure_value("sh_size", shdr.sh_size);
-  relf_cn();
-  relf_indent(indent);
-  relf_show_pure_value("sh_link", shdr.sh_link);
-  relf_cn();
-  relf_indent(indent);
-  relf_show_pure_value("sh_info", shdr.sh_info);
-  relf_cn();
 
   relf_indent(indent);
-  relf_show_pure_value("sh_addralign", shdr.sh_addralign);
+  relf_show_pure_value("p_offset", phdr->p_offset);
   relf_cn();
   relf_indent(indent);
-  relf_show_pure_value("sh_entsize", shdr.sh_entsize);
+  relf_show_pure_value("p_vaddr", phdr->p_vaddr);
   relf_cn();
-  */
+  relf_indent(indent);
+  relf_show_pure_value("p_paddr", phdr->p_paddr);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("p_filesz", phdr->p_filesz);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("p_memsz", phdr->p_memsz);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("p_align", phdr->p_align);
+  relf_n();
   
   relf_indent(indent-1);
   relf_co();    // close object
@@ -891,6 +902,47 @@ int relf_show_program_header_list(relf_struct *relf)
   return 1;
 }
 
+/* returns a pointer to a memory location within a section */
+void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
+{
+  GElf_Shdr shdr;
+  Elf_Scn *scn;
+  Elf_Data *data = NULL;
+  size_t block_addr = 0;
+  
+  if ( section_index == 0 || section_index > 0x0fff0 )
+    return NULL;
+  
+  scn = elf_getscn (relf->elf,  section_index);  
+  if ( scn == NULL )
+    return fprintf(stderr, "libelf: %s, section_index=%ld \n", elf_errmsg(-1), section_index), NULL;
+  if ( gelf_getshdr( scn, &shdr ) != &shdr )
+    return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
+
+  /*
+    shdr.sh_addr                contains the base address for the target memory
+    shdr.sh_size                 contains the size of the section
+  */
+  
+  if ( shdr.sh_size == 0 )
+    return NULL;
+  
+  for(;;)
+  {
+    data = elf_getdata(scn , data);     // if data==NULL return first data, otherwise return next data
+    if ( data == NULL )
+      break;
+    if ( data->d_buf == NULL )
+      break;
+    block_addr = shdr.sh_addr + data->d_off;    // calculate the address of this data in the target system, not 100% sure whether this is correct
+    //printf("block_addr=%08lx addr=%08lx d_buf=%p\n", block_addr, addr, data->d_buf);
+    if ( addr >= block_addr && addr < block_addr+data->d_size )  // check if the requested addr is inside the current block
+    {
+      return data->d_buf + addr - block_addr;   // found
+    }
+  }  
+  return NULL;
+}
 
 int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
 {
@@ -1002,6 +1054,19 @@ int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int 
     relf_indent(indent+1);
     relf_show_et_value(et_st_visibility, "ST_VISIBILITY", GELF_ST_VISIBILITY(symbol.st_other));
     //relf_cn();
+    
+    if ( symbol.st_shndx > 0 )
+    {
+      unsigned char * ptr = (unsigned char *)relf_get_mem_ptr(relf, symbol.st_shndx, symbol.st_value);
+      if ( ptr != NULL )
+      {
+        relf_cn();    
+        relf_indent(indent+1);
+        
+        relf_show_memory("target_memory", ptr, symbol.st_size > 16 ? 16 : symbol.st_size);
+      }
+    }
+
     
     relf_n();
     relf_indent(indent);
@@ -1121,12 +1186,13 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_sect
   relf_n();
   relf_indent(indent-1);
   relf_oa();    // open array
+  
   for(;;)
   {
     if ( data_cnt >= shdr.sh_size )
       break;
     
-    data = elf_getdata(scn , data);
+    data = elf_getdata(scn , data);     // if data==NULL return first data, otherwise return next data
     if ( data == NULL )
       break;
     
@@ -1136,6 +1202,10 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_sect
       relf_cn();
     relf_indent(indent);
     relf_oo();
+
+    //relf_indent(indent+1);
+    //relf_show_pure_value("d_buf", (long long int)(data->d_buf));
+    //relf_cn();
     
     relf_indent(indent+1);
     relf_show_et_value(et_d_type, "d_type", data->d_type);
@@ -1218,7 +1288,7 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_show_pure_value("sh_addr", shdr.sh_addr);
   relf_cn();
   relf_indent(indent);
-  relf_show_pure_value("sh_offset", shdr.sh_offset);
+  relf_show_pure_value("sh_offset", shdr.sh_offset);            // this is the file offset inside the elf file, useless in the elf file
   relf_cn();
   relf_indent(indent);
   relf_show_pure_value("sh_size", shdr.sh_size);
@@ -1282,7 +1352,7 @@ int relf_show_section_list(relf_struct *relf)
   return 1;
 }
 
-int default_return_value = 0;
+int default_return_value = 123;
 
 int main( int argc , char ** argv )
 {
