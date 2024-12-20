@@ -259,6 +259,25 @@ elf_translate_struct et_e_machine[] = {
   ETNONE()
 };
 
+elf_translate_struct et_phdr_type[] = {
+ ET(PT_NULL, "Program header table entry unused"),
+ ET(PT_LOAD, "Loadable program segment"),
+ ET(PT_DYNAMIC, "Dynamic linking information"),
+ ET(PT_INTERP, "Program interpreter"),
+ ET(PT_NOTE, "Auxiliary information"),
+ ET(PT_SHLIB, "Reserved"),
+ ET(PT_PHDR, "Entry for header table itself"),
+ ET(PT_TLS, "Thread-local storage segment"),
+ ETNONE()
+};
+
+elf_translate_struct et_phdr_flags[] = {
+ ET(PF_X, "Segment is executable"),
+ ET(PF_W, "Segment is writable"),
+ ET(PF_R, "Segment is readable"),
+ ETNONE()
+};
+
 
 elf_translate_struct et_sh_type[] = {
   ET(SHT_NULL, "Section header table entry unused"),
@@ -747,6 +766,10 @@ void relf_show_elf_header(relf_struct *relf)
 
   relf_cn();
   relf_indent(indent);
+  relf_show_pure_value("program_header_total", relf->program_header_total);
+
+  relf_cn();
+  relf_indent(indent);
   relf_show_pure_value("symtab_section_index", relf->symtab_section_index);
 
   relf_cn();
@@ -761,6 +784,113 @@ void relf_show_elf_header(relf_struct *relf)
   relf_indent(indent);
   relf_show_pure_value("dynstr_section_index", relf->dynstr_section_index);
 }
+
+/*
+  phdr member
+  Elf64_Word	p_type;		Segment type
+  Elf64_Word	p_flags;		Segment flags
+  Elf64_Off	p_offset;		Segment file offset
+  Elf64_Addr	p_vaddr;		Segment virtual address
+  Elf64_Addr	p_paddr;		Segment physical address
+  Elf64_Xword	p_filesz;		Segment size in file
+  Elf64_Xword	p_memsz;	Segment size in memory
+  Elf64_Xword	p_align;		Segment alignment
+*/
+
+int relf_show_program_header(relf_struct *relf, GElf_Phdr *phdr)
+{
+  // et_phdr_type
+// et_phdr_flags
+  int indent = 3;
+  
+  relf_indent(indent-1);
+  relf_oo();
+  
+  //relf_indent(indent);
+  //relf_show_pure_value("section_index", (long long unsigned)elf_ndxscn(scn));   // get the "official" section index
+  //relf_cn();    
+  
+  //relf_indent(indent);
+  //relf_show_string_value("sh_name", section_name);
+  //relf_cn();  
+  
+  relf_indent(indent);
+  relf_show_et_value(et_phdr_type, "p_type", phdr->p_type);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_flag_value_list(et_phdr_flags, "p_flags", phdr->p_flags);
+  relf_cn();
+  
+  /*
+  relf_indent(indent);
+  relf_show_pure_value("sh_addr", shdr.sh_addr);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("sh_offset", shdr.sh_offset);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("sh_size", shdr.sh_size);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("sh_link", shdr.sh_link);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("sh_info", shdr.sh_info);
+  relf_cn();
+
+  relf_indent(indent);
+  relf_show_pure_value("sh_addralign", shdr.sh_addralign);
+  relf_cn();
+  relf_indent(indent);
+  relf_show_pure_value("sh_entsize", shdr.sh_entsize);
+  relf_cn();
+  */
+  
+  relf_indent(indent-1);
+  relf_co();    // close object
+  //printf("Section %04lu %-18s type=%10lu size=%5ld entsize=%5ld\n", (unsigned long)elf_ndxscn(scn), section_name, (unsigned long)shdr.sh_type, (unsigned long)shdr.sh_size, (unsigned long)shdr.sh_entsize);
+  return 1;
+
+
+  
+}
+
+int relf_show_program_header_list(relf_struct *relf)
+{
+  int indent = 1;
+  int i;
+  GElf_Phdr phdr;
+  int is_first = 1;
+  
+  /* loop over all program headers */
+  relf_indent(indent);
+  relf_member("program_header_list");
+  relf_n();
+  relf_indent(indent);
+  relf_oa();            // open array
+  for( i = 0; i < relf->program_header_total; i++ )
+  {
+    if ( gelf_getphdr(relf->elf, i, &phdr) == NULL )
+      break;
+    
+    if ( is_first )
+      is_first = 0;
+    else
+      relf_cn();                // comma + new line
+      
+    if ( relf_show_program_header(relf, &phdr) == 0 )
+    {
+      relf_ca();
+      relf_n();
+      return 0;
+    }
+  }
+  relf_n();
+  relf_indent(indent);
+  relf_ca();    // close array
+  return 1;
+}
+
 
 int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
 {
@@ -1152,7 +1282,7 @@ int relf_show_section_list(relf_struct *relf)
   return 1;
 }
 
-int default_return_value = 1;
+int default_return_value = 0;
 
 int main( int argc , char ** argv )
 {
@@ -1165,6 +1295,10 @@ int main( int argc , char ** argv )
   relf_oo();
   relf_show_elf_header(&relf);
   relf_cn();
+  
+  relf_show_program_header_list(&relf);
+  relf_cn();
+  
   
   relf_show_section_list(&relf);
   relf_co();
