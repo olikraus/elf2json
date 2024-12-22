@@ -18,6 +18,12 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
+  Notes:
+    - functions objects change if they move in memory
+    - function objects don't have rela entries
+    - function objects change check: equal size and: within 8 bytes max 4 differences
+
 */
 
 #include <stdio.h>
@@ -1029,6 +1035,53 @@ void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
   return NULL;
 }
 
+const GElf_Sym *get_symbol(Elf *elf, size_t scn_idx, int sym_idx)
+{
+  static GElf_Sym symbol;
+  
+  Elf_Scn *scn = elf_getscn(elf, scn_idx);
+  if ( scn != NULL )
+  {
+    // Elf_Data *elf_getdata (Elf_Scn *__scn, Elf_Data *__data);
+    Elf_Data *data = NULL;
+    size_t symbols_per_data;
+    GElf_Shdr shdr;
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return NULL;
+    
+    for(;;)
+    {
+      data = elf_getdata(scn , data);     // if data==NULL return first data, otherwise return next data
+      if ( data == NULL )
+        return NULL;
+      symbols_per_data = data->d_size / shdr.sh_entsize;
+      assert(shdr.sh_entsize*symbols_per_data == data->d_size);
+      if ( sym_idx < symbols_per_data )
+        break;
+      sym_idx -= data->d_size / shdr.sh_entsize;
+    }
+    return gelf_getsym(data, sym_idx, &symbol);
+  }
+  return NULL;
+}
+
+const char *get_symbol_name(Elf *elf, size_t scn_idx, int sym_idx)
+{
+  const GElf_Sym *sym = get_symbol(elf, scn_idx, sym_idx);
+  if ( sym != NULL )
+  {
+    Elf_Scn *scn = elf_getscn(elf, scn_idx);
+    GElf_Shdr shdr;
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return NULL;
+
+    return elf_strptr(elf, shdr.sh_link, sym->st_name );
+  }
+  return NULL;
+}
+
+
+
 int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
   int i = 0;
@@ -1281,6 +1334,7 @@ int relf_show_dyn_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data)
 
 int relf_show_rela_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
+  const char *symbol_name;
   int i = 0;
 /*
 typedef struct
@@ -1315,10 +1369,7 @@ typedef struct
 
     if ( sh_link > 0 )
     {
-     // symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, GELF_R_SYM(rela.r_info) );
-      //symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, 0 );
-      //if ( symbol_name == NULL )
-      //  return fprintf(stderr, "libelf: %s, section number: %d\n", elf_errmsg(-1), corresponding_section_string_table_index), 0;
+      symbol_name = get_symbol_name(relf->elf, sh_link, GELF_R_SYM(rela.r_info));
     }
 
 
@@ -1334,10 +1385,14 @@ typedef struct
     relf_indent(indent+1);
     relf_show_pure_value( "SYM", GELF_R_SYM(rela.r_info));              // this is probably an index into the symbol table
     relf_cn();
-    
-    //relf_indent(indent+1);
-    //relf_show_string_value("symbol", symbol_name);
-    //relf_cn();    
+
+
+    if ( symbol_name != NULL )
+    {
+      relf_indent(indent+1);
+      relf_show_string_value("symbol_name", symbol_name);
+      relf_cn();    
+    }
     
     relf_indent(indent+1);
     relf_show_pure_value("TYPE", GELF_R_TYPE(rela.r_info));
