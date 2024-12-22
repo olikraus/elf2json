@@ -26,6 +26,91 @@
 #include <libelf.h>
 #include <gelf.h>
 #include <string.h>
+#include <assert.h>
+
+/*==========================================*/
+/* Target System Special Code */
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+// seems to be missing on mingw
+unsigned long __stack_chk_guard = 0xaa55;
+void __attribute__ ((noreturn)) __stack_chk_fail (void)
+{
+	exit(0);
+}
+#endif
+
+
+/*==========================================*/
+/* CRC32 from https://datatracker.ietf.org/doc/html/rfc1952#section-8 */
+/* updated names and data-types */
+
+/* Table of CRCs of all 8-bit messages. */
+unsigned long crc_table[256];
+
+/* Flag: has the table been computed? Initially false. */
+int is_crc_table_computed = 0;
+
+/* Make the table for a fast CRC. */
+void compute_crc_table(void)
+{
+  unsigned long c;
+  int n, k;
+  for (n = 0; n < 256; n++) 
+  {
+    c = (unsigned long) n;
+    for (k = 0; k < 8; k++) 
+    {
+      if (c & 1) 
+      {
+        c = 0xedb88320L ^ (c >> 1);
+      } 
+      else 
+      {
+        c = c >> 1;
+      }
+    }
+    crc_table[n] = c;
+  }
+  is_crc_table_computed = 1;
+}
+
+/*
+ Update a running crc with the bytes buf[0..len-1] and return
+ the updated crc. The crc should be initialized to zero. Pre- and
+ post-conditioning (one's complement) is performed within this
+ function so it shouldn't be done by the caller. Usage example:
+
+   unsigned long crc = 0L;
+
+   while (read_buffer(buffer, length) != EOF) {
+     crc = update_crc(crc, buffer, length);
+   }
+   if (crc != original_crc) error();
+*/
+unsigned long update_crc(unsigned long crc, unsigned char *buf, size_t len)
+{
+  unsigned long c = crc ^ 0xffffffffL;
+  size_t n;
+
+  if (!is_crc_table_computed)
+    compute_crc_table();
+  for (n = 0; n < len; n++) 
+  {
+    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+  }
+  return c ^ 0xffffffffL;
+}
+
+/* Return the CRC of the bytes buf[0..len-1]. */
+unsigned long get_crc(unsigned char *buf, size_t len)
+{
+  return update_crc(0L, buf, len);
+}
+      
+      
+/*==========================================*/
+/* ELF value, macro names and comments */
 
 struct _elf_translate_struct
 {
@@ -426,39 +511,6 @@ elf_translate_struct et_d_tag[] = {
   ETNONE()
 };
 
-
-/* read only elf */
-struct _relf_struct
-{
-  int fd;
-  Elf *elf;                                     // elf object, returned from elf_begin
-  
-  size_t section_header_total;               // shdrnum, total number of section headers (each section has a section header, so this is the same as the total number of sectios)
-  size_t section_header_string_table_index;  // shdrstrndx, the index of the section where we find the strings for the the section header names;
-  size_t program_header_total;               // phdrnum, total number of program headers
-  
-  GElf_Ehdr elf_file_header;                    // ehdr elf file header
-  GElf_Shdr section_header;                     // shdr section header
-  
-  size_t symtab_section_index;             // section header index of the ".symtab" section, 0 if not found
-  size_t strtab_section_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab, 0 if not found
-  size_t dynsym_section_index;          // section header index of the ".dynsym" section, 0 if not found
-  size_t dynstr_section_index;          // section header index of the ".dynstr" section, 0 if not found
-  
-  
-};
-typedef struct _relf_struct relf_struct;
-
-
-#if defined(__MINGW32__) || defined(__MINGW64__)
-// seems to be missing on mingw
-unsigned long __stack_chk_guard = 0xaa55;
-void __attribute__ ((noreturn)) __stack_chk_fail (void)
-{
-	exit(0);
-}
-#endif
-
 const char *et_get_macro(elf_translate_struct *et, size_t n)
 {
   size_t i = 0;
@@ -486,6 +538,34 @@ const char *et_get_description(elf_translate_struct *et, size_t n)
   }
   return "";
 }
+
+/*==========================================*/
+/* Read-Onle ELF wrapper for the gelf/elf library */
+
+
+/* read only elf */
+struct _relf_struct
+{
+  int fd;
+  Elf *elf;                                     // elf object, returned from elf_begin
+  
+  size_t section_header_total;               // shdrnum, total number of section headers (each section has a section header, so this is the same as the total number of sectios)
+  size_t section_header_string_table_index;  // shdrstrndx, the index of the section where we find the strings for the the section header names;
+  size_t program_header_total;               // phdrnum, total number of program headers
+  
+  GElf_Ehdr elf_file_header;                    // ehdr elf file header
+  GElf_Shdr section_header;                     // shdr section header
+  
+  size_t symtab_section_index;             // section header index of the ".symtab" section, 0 if not found
+  size_t strtab_section_index;               // section header index of the ".strtab" section, this contains the strings for the symbols from .symtab, 0 if not found
+  size_t dynsym_section_index;          // section header index of the ".dynsym" section, 0 if not found
+  size_t dynstr_section_index;          // section header index of the ".dynstr" section, 0 if not found
+  
+  
+};
+typedef struct _relf_struct relf_struct;
+
+
 
 // returns NULL if not found
 Elf_Scn *relf_find_scn_by_name(relf_struct *relf, const char *name)
@@ -644,6 +724,7 @@ void relf_show_pure_value(const char *variable, long long unsigned n)
   printf("[%llu, \"0x%08llx\"]", n, n);
 }
 
+
 void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, long long unsigned n)
 {
   relf_member(variable);
@@ -651,6 +732,10 @@ void relf_show_flag_value_list(elf_translate_struct *et, const char *variable, l
   relf_show_flag_list(et, n);
   printf("]");
 }
+
+/* 54 0x85a53329 */
+/* 54 0xe8a996fa  [243,15,30,250,85,72,137,229,72,131,236,16,72,137,125,248,72,137,117,240,72,139,85,240,72,139,69,248,72,137,198,72,141,5,7,77,0,0,72,137,199,184,0,0,0,0,232,192,243,255,255,144,201,195] */
+/* 54 0xe332ee3e [243,15,30,250,85,72,137,229,72,131,236,16,72,137,125,248,72,137,117,240,72,139,85,240,72,139,69,248,72,137,198,72,141,5,1,77,0,0,72,137,199,184,0,0,0,0,232,182,243,255,255,144,201,195] */
 
 void relf_show_string_value(const char *variable, const char *value)
 {
@@ -944,7 +1029,7 @@ void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
   return NULL;
 }
 
-int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
+int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
   int i = 0;
   
@@ -1017,7 +1102,7 @@ int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int 
     else
       relf_cn();
 
-    symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, symbol.st_name );
+    symbol_name = elf_strptr(relf->elf, sh_link, symbol.st_name );
     if ( symbol_name == NULL )
       return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
@@ -1060,10 +1145,13 @@ int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int 
       unsigned char * ptr = (unsigned char *)relf_get_mem_ptr(relf, symbol.st_shndx, symbol.st_value);
       if ( ptr != NULL )
       {
+        unsigned long crc = get_crc(ptr, symbol.st_size);
         relf_cn();    
         relf_indent(indent+1);
-        
-        relf_show_memory("target_memory", ptr, symbol.st_size > 16 ? 16 : symbol.st_size);
+        relf_show_pure_value("obj_crc", crc);
+        relf_cn();    
+        relf_indent(indent+1);
+        relf_show_memory("obj_data", ptr, symbol.st_size > 64 ? 64 : symbol.st_size);
       }
     }
 
@@ -1149,14 +1237,144 @@ int relf_show_dyn_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data)
   return 1;
 }
 
-int relf_show_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresponding_section_string_table_index)
+
+/* Relocation table entry without addend (in section of type SHT_REL).  */
+// ELF_T_REL
+// typedef Elf64_Rel GElf_Rel;
+
+/* Relocation table entry with addend (in section of type SHT_RELA).  */
+// ELF_T_RELA
+// typedef Elf64_Rela GElf_Rela;
+// extern GElf_Rela *gelf_getrela (Elf_Data *__data, int __ndx, GElf_Rela *__dst);
+
+
+/* Relative relocation entry (in section of type SHT_RELR).  */
+// ELF_T_RELR
+// typedef Elf64_Relr GElf_Relr;
+
+//typedef struct
+//{
+//  Elf64_Addr	r_offset;		/* Address */
+//  Elf64_Xword	r_info;			/* Relocation type and symbol index */
+//  Elf64_Sxword	r_addend;		/* Addend */
+//} Elf64_Rela;
+
+
+//#define ELF64_R_SYM(i)			((i) >> 32)
+//#define ELF64_R_TYPE(i)			((i) & 0xffffffff)
+// processor specific reallocation types (ELF64_R_TYPE): https://docs.oracle.com/cd/E19120-01/open.solaris/819-0690/chapter6-26/index.html
+// rtype seems to be derived from the machine: https://github.com/bminor/binutils-gdb/blob/d77a3144958c8370a46cf17a87ee3c9081da9038/binutils/readelf.c#L2031
+// mapping from e_machine to the rtype set: https://github.com/bminor/binutils-gdb/blob/d77a3144958c8370a46cf17a87ee3c9081da9038/binutils/readelf.c#L2031
+// actual realocation might happen here: https://repo.or.cz/glibc.git/blob/HEAD:/elf/dl-reloc.c, makro def is here: https://github.com/lattera/glibc/blob/master/elf/dynamic-link.h
+// finally the machine dependent mapping is done here: https://github.com/lattera/glibc/blob/master/sysdeps/x86_64/dl-machine.h
+// readelf -l (minus L) prints a mapping between programheaders and sections.
+
+
+
+
+
+/*
+  section:
+    sh_link              	The section header index of the associated symbol table.        
+    sh_info                      	The section header index of the section to which the relocation applies.
+*/
+
+int relf_show_rela_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
+{
+  int i = 0;
+/*
+typedef struct
+{
+  Elf64_Addr	r_offset;		// Address 
+  Elf64_Xword	r_info;			// Relocation type and symbol index
+  Elf64_Sxword	r_addend;		// Addend
+} Elf64_Rela;
+  extern GElf_Rela *gelf_getrela (Elf_Data *__data, int __ndx, GElf_Rela *__dst);
+*/
+  GElf_Rela rela;
+  int indent = 6;
+  int is_first = 1;
+  //char *symbol_name = "(none)";
+
+
+  relf_cn();
+  relf_indent(indent-1);
+  relf_member("rela_list");
+  relf_n();
+  relf_indent(indent-1);
+  relf_oa();    // open array
+  
+  /* extern GElf_Rela *gelf_getrela (Elf_Data *__data, int __ndx, GElf_Rela *__dst); */
+  while( gelf_getrela(data, i, &rela) != NULL )
+  {
+    if ( is_first ) 
+      is_first = 0;
+    else
+      relf_cn();
+
+
+    if ( sh_link > 0 )
+    {
+     // symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, GELF_R_SYM(rela.r_info) );
+      //symbol_name = elf_strptr(relf->elf, corresponding_section_string_table_index, 0 );
+      //if ( symbol_name == NULL )
+      //  return fprintf(stderr, "libelf: %s, section number: %d\n", elf_errmsg(-1), corresponding_section_string_table_index), 0;
+    }
+
+
+
+    
+    relf_indent(indent);
+    relf_oo();
+    
+    relf_indent(indent+1);
+    relf_show_pure_value("r_offset", rela.r_offset);
+    relf_cn();
+
+    relf_indent(indent+1);
+    relf_show_pure_value( "SYM", GELF_R_SYM(rela.r_info));              // this is probably an index into the symbol table
+    relf_cn();
+    
+    //relf_indent(indent+1);
+    //relf_show_string_value("symbol", symbol_name);
+    //relf_cn();    
+    
+    relf_indent(indent+1);
+    relf_show_pure_value("TYPE", GELF_R_TYPE(rela.r_info));
+    relf_cn();
+    
+    relf_indent(indent+1);
+    relf_show_pure_value("r_addend", rela.r_addend);
+      
+    relf_n();
+    relf_indent(indent);
+    relf_co();
+        
+    i++;
+  }
+  relf_n();
+  relf_indent(indent-1);
+  relf_ca(); // close array
+  return 1;
+}
+
+
+/*
+  dispatch procedure to show the data for a specific data type
+  
+  note: corresponding_section_string_table_index is used for ELF_T_SYM only, but is probably obsolete, because this is also aavailable in shdr.sh_link
+      see Figure 4-12 in https://refspecs.linuxbase.org/elf/gabi4+/ch4.sheader.html
+*/
+int relf_show_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
   switch(data->d_type)
   {
     case ELF_T_SYM:             // used by SHT_SYMTAB, SHT_DYNSYM
-      return relf_show_symbol_data(relf, scn, data, corresponding_section_string_table_index);
+      return relf_show_symbol_data(relf, scn, data, sh_link);
     case ELF_T_DYN:             // used by SHT_DYNAMIC
       return relf_show_dyn_data(relf, scn, data);
+    case ELF_T_RELA:
+      return relf_show_rela_data(relf, scn, data, sh_link);
     default:
       return 1;
   }
@@ -1169,6 +1387,9 @@ int relf_show_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int corresp
   If such a corresponding string table exists, then corresponding_section_string_table_index will contain that number.
     Example is the index of ".strtab" for ".symtab", this means that if scn is ".symtab", 
     then corresponding_section_string_table_index will contain the index of ".strtab"
+
+  Update: sh_link usually contains the corresponding string table (Figure 4-12 in https://refspecs.linuxbase.org/elf/gabi4+/ch4.sheader.html)
+    It is probably better to take it from there if the table is SHT_SYMTAB or SHT_DYNSYM
 */
 int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_section_string_table_index)
 {
@@ -1220,7 +1441,9 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_sect
     relf_show_pure_value("d_align", data->d_align);
     //printf("  Data block type=%lu size=%lu off=%lu\n", (unsigned long)data->d_type, (unsigned long)data->d_size, (unsigned long)data->d_off);
     
-    relf_show_data(relf, scn, data, corresponding_section_string_table_index);
+    
+    //relf_show_data(relf, scn, data, corresponding_section_string_table_index);
+    relf_show_data(relf, scn, data, shdr.sh_link);
     
     
     data_cnt += data->d_size;
@@ -1252,14 +1475,18 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
       SHT_SYMTAB         requires a ".strtab" section of type SHT_STRTAB
     This is checked here and assigned to section_string_table_index.
     The string table index is then passed to the show data procedure
+    
+    
   */
   switch (shdr.sh_type)
   {
     case SHT_DYNSYM:
-      section_string_table_index = relf->dynstr_section_index;
+      section_string_table_index = relf->dynstr_section_index;  // should be the same as shdr.sh_link, see Figure 4-12 in https://refspecs.linuxbase.org/elf/gabi4+/ch4.sheader.html
+      assert(section_string_table_index == shdr.sh_link);
       break;
     case SHT_SYMTAB:
-      section_string_table_index = relf->strtab_section_index;
+      section_string_table_index = relf->strtab_section_index; // should be the same as shdr.sh_link, see Figure 4-12 in https://refspecs.linuxbase.org/elf/gabi4+/ch4.sheader.html
+      assert(section_string_table_index == shdr.sh_link);
       break;
   }
   

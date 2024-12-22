@@ -31,5 +31,5 @@ On linux it might be required to install libelf-dev.
   These section index values might be zero, if the corresponding section doesn't exist. The section index values are **not** the index value into the JSON section list, instead the section index
   will match the value of the `section_index` member of the section.
  * Strings are always resolved: The string is printed as JSON value instead of the string index (section name, symbol name, etc).
- * For a data object symbel, the `target_memory` member will show  the first view bytes of the data object (for example this will show the init value of a global variable).
+ * For a data object symbol, `obj_crc` is a crc32 over the complete object and the `obj_data` member will show  the first view bytes of the data object (for example this will show the init value of a global variable).
  
