@@ -32,4 +32,5 @@ On linux it might be required to install libelf-dev.
   will match the value of the `section_index` member of the section.
  * Strings are always resolved: The string is printed as JSON value instead of the string index (section name, symbol name, etc).
  * For a data object symbol, `obj_crc` is a crc32 over the complete object and the `obj_data` member will show  the first view bytes of the data object (for example this will show the init value of a global variable).
+ * `section_addr_list` is similar to `section_list` but only reports none-empty section with `SHF_ALLOC` flag in increase address order (similar to readelf -S -W).
  
