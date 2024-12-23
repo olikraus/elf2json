@@ -24,6 +24,12 @@
     - function objects don't have rela entries
     - function objects change check: equal size and: within 8 bytes max 4 differences
 
+  Get index of section.
+    extern size_t elf_ndxscn(Elf_Scn *__scn);
+
+  Get section at INDEX.
+    Elf_Scn *elf_getscn (Elf *__elf, size_t __index);
+
 */
 
 #include <stdio.h>
@@ -114,7 +120,99 @@ unsigned long get_crc(unsigned char *buf, size_t len)
   return update_crc(0L, buf, len);
 }
       
-      
+
+/*==========================================*/
+
+/* return an SHF_ALLOC section which is most close to the given addess */
+/* addr will be updated */
+Elf_Scn  *get_section_by_address(Elf * e, Elf64_Addr *addr)
+{
+  Elf64_Addr min_delta;
+  Elf_Scn  *min_scn  = NULL;
+  Elf64_Addr new_addr;
+  
+  GElf_Shdr shdr;
+  Elf_Scn  *scn  = NULL;
+  /* loop over all sections */
+  scn = NULL;
+  while (( scn = elf_nextscn(e, scn)) != NULL ) 
+  {
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
+    if ( (shdr.sh_flags & SHF_ALLOC) != 0 && shdr.sh_size > 0 )
+    {
+      if ( shdr.sh_addr >= *addr )
+      {
+        if ( min_delta > shdr.sh_addr -  *addr )
+        {
+          min_delta = shdr.sh_addr -  *addr;
+          min_scn = scn;
+          new_addr = shdr.sh_addr + shdr.sh_size;
+        }
+      }
+    }
+  }
+  if ( min_scn != NULL )
+  {
+    /*
+    if ( gelf_getshdr( min_scn, &shdr ) != &shdr )
+      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
+    fprintf(stderr, "%09lx: %09lx %09lx\n", *addr, shdr.sh_addr, shdr.sh_size);
+    */
+    *addr = new_addr;
+  }
+  return min_scn;
+}
+
+/* return symbel with index sym_idx from section with the number scn_idx */
+const GElf_Sym *get_symbol(Elf *elf, size_t scn_idx, int sym_idx)
+{
+  static GElf_Sym symbol;
+  
+  Elf_Scn *scn = elf_getscn(elf, scn_idx);
+  if ( scn != NULL )
+  {
+    // Elf_Data *elf_getdata (Elf_Scn *__scn, Elf_Data *__data);
+    Elf_Data *data = NULL;
+    size_t symbols_per_data;
+    GElf_Shdr shdr;
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return NULL;
+    
+    for(;;)
+    {
+      data = elf_getdata(scn , data);     // if data==NULL return first data, otherwise return next data
+      if ( data == NULL )
+        return NULL;
+      symbols_per_data = data->d_size / shdr.sh_entsize;
+      assert(shdr.sh_entsize*symbols_per_data == data->d_size);
+      if ( sym_idx < symbols_per_data )
+        break;
+      sym_idx -= data->d_size / shdr.sh_entsize;
+    }
+    return gelf_getsym(data, sym_idx, &symbol);
+  }
+  return NULL;
+}
+
+const char *get_symbol_name(Elf *elf, size_t scn_idx, int sym_idx)
+{
+  const GElf_Sym *sym = get_symbol(elf, scn_idx, sym_idx);
+  if ( sym != NULL )
+  {
+    Elf_Scn *scn = elf_getscn(elf, scn_idx);
+    GElf_Shdr shdr;
+    if ( gelf_getshdr( scn, &shdr ) != &shdr )
+      return NULL;
+
+    return elf_strptr(elf, shdr.sh_link, sym->st_name );
+  }
+  return NULL;
+}
+
+
+
+
 /*==========================================*/
 /* ELF value, macro names and comments */
 
@@ -1035,52 +1133,6 @@ void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
   return NULL;
 }
 
-const GElf_Sym *get_symbol(Elf *elf, size_t scn_idx, int sym_idx)
-{
-  static GElf_Sym symbol;
-  
-  Elf_Scn *scn = elf_getscn(elf, scn_idx);
-  if ( scn != NULL )
-  {
-    // Elf_Data *elf_getdata (Elf_Scn *__scn, Elf_Data *__data);
-    Elf_Data *data = NULL;
-    size_t symbols_per_data;
-    GElf_Shdr shdr;
-    if ( gelf_getshdr( scn, &shdr ) != &shdr )
-      return NULL;
-    
-    for(;;)
-    {
-      data = elf_getdata(scn , data);     // if data==NULL return first data, otherwise return next data
-      if ( data == NULL )
-        return NULL;
-      symbols_per_data = data->d_size / shdr.sh_entsize;
-      assert(shdr.sh_entsize*symbols_per_data == data->d_size);
-      if ( sym_idx < symbols_per_data )
-        break;
-      sym_idx -= data->d_size / shdr.sh_entsize;
-    }
-    return gelf_getsym(data, sym_idx, &symbol);
-  }
-  return NULL;
-}
-
-const char *get_symbol_name(Elf *elf, size_t scn_idx, int sym_idx)
-{
-  const GElf_Sym *sym = get_symbol(elf, scn_idx, sym_idx);
-  if ( sym != NULL )
-  {
-    Elf_Scn *scn = elf_getscn(elf, scn_idx);
-    GElf_Shdr shdr;
-    if ( gelf_getshdr( scn, &shdr ) != &shdr )
-      return NULL;
-
-    return elf_strptr(elf, shdr.sh_link, sym->st_name );
-  }
-  return NULL;
-}
-
-
 
 int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
@@ -1512,17 +1564,17 @@ int relf_show_data_list(relf_struct *relf, Elf_Scn  *scn, int corresponding_sect
   return 1;
 }
 
-int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
+int relf_show_section(relf_struct *relf, Elf_Scn  *scn, int is_data)
 {
   int indent = 3;
   GElf_Shdr shdr;
   int section_string_table_index = 0;
   const char *section_name;
-    if ( gelf_getshdr( scn, &shdr ) != &shdr )
-      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
-    section_name = elf_strptr(relf->elf, relf->section_header_string_table_index, shdr.sh_name );
-    if ( section_name == NULL )
-      return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+  if ( gelf_getshdr( scn, &shdr ) != &shdr )
+    return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
+  section_name = elf_strptr(relf->elf, relf->section_header_string_table_index, shdr.sh_name );
+  if ( section_name == NULL )
+    return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), 0;
 
   /*
     some sections require a string table, for example
@@ -1587,11 +1639,11 @@ int relf_show_section(relf_struct *relf, Elf_Scn  *scn)
   relf_cn();
   relf_indent(indent);
   relf_show_pure_value("sh_entsize", shdr.sh_entsize);
-  relf_cn();
-  
-  
-  relf_show_data_list(relf, scn, section_string_table_index);
-  
+  if ( is_data )
+  {
+    relf_cn();
+    relf_show_data_list(relf, scn, section_string_table_index);
+  }
   relf_n();
   relf_indent(indent-1);
   relf_co();    // close object
@@ -1619,7 +1671,7 @@ int relf_show_section_list(relf_struct *relf)
     else
       relf_cn();                // comma + new line
       
-    if ( relf_show_section(relf, scn) == 0 )
+    if ( relf_show_section(relf, scn, 1) == 0 )
     {
       relf_ca();
       relf_n();
@@ -1630,9 +1682,54 @@ int relf_show_section_list(relf_struct *relf)
   relf_n();
   relf_indent(indent);
   relf_ca();    // close array
-  relf_n();
+  //relf_n();
   return 1;
 }
+
+
+
+int relf_show_section_addr_list(relf_struct *relf)
+{
+  int indent = 1;
+  Elf64_Addr addr = 0;
+  Elf_Scn  *scn;        // section descriptor
+  int is_first = 1;
+  /* loop over all sections */
+  relf_indent(indent);
+  relf_member("section_addr_list");
+  relf_n();
+  relf_indent(indent);
+  relf_oa();            // open array
+  scn = elf_nextscn(relf->elf, NULL);
+  while ( scn != NULL ) 
+  for(;;)
+  {
+    
+    
+
+    scn = get_section_by_address(relf->elf, &addr);
+    if ( scn == NULL )
+      break;
+    
+    if ( is_first )
+      is_first = 0;
+    else
+      relf_cn();                // comma + new line
+    
+    if ( relf_show_section(relf, scn, 0) == 0 )
+    {
+      relf_ca();
+      relf_n();
+      return 0;
+    }
+  }
+  relf_n();
+  relf_indent(indent);
+  relf_ca();    // close array
+  //relf_n();
+  return 1;
+}
+
 
 int default_return_value = 123;
 
@@ -1651,8 +1748,12 @@ int main( int argc , char ** argv )
   relf_show_program_header_list(&relf);
   relf_cn();
   
-  
   relf_show_section_list(&relf);
+  relf_cn();
+
+  relf_show_section_addr_list(&relf);
+  relf_n();
+
   relf_co();
   relf_n();
   
@@ -1660,6 +1761,7 @@ int main( int argc , char ** argv )
   
   return default_return_value;
 }
+
 
 
 
