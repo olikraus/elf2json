@@ -25,24 +25,22 @@ else
 LDFLAGS = -Wl,-Bstatic -lelf -lm
 endif
 
-COSRC = $(shell ls *.c)
-COOBJ = $(COSRC:.c=.o)
+#SRC = $(shell ls *.c)
+#OBJ = $(SRC:.c=.o)
 
 debug: all
 
 sanitize: all 
 
 release: all
-	strip a2l_info.exe
-	strip a2l_search.exe
 	
 #gprof: all
 
 all: elf2json
 	
-elf2json: $(COOBJ) 
+elf2json: elf2json.o 
 	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
 
 clean:
-	-rm $(COOBJ)
+	-rm elf2json.o $(OBJ)
 	

@@ -29,6 +29,10 @@
 
   Get section at INDEX.
     Elf_Scn *elf_getscn (Elf *__elf, size_t __index);
+    
+  
+  objcopy -O ihex input.elf output.hex
+  objcopy --info                list all supported formats
 
 */
 
