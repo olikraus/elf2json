@@ -18,8 +18,9 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-  objcopy -O ihex input.elf output.hex
-
+  Write the section content to a binary file, similar to
+    objcopy -O binary input.elf output.bin
+  
 */
 
 #include <stdio.h>
@@ -56,6 +57,8 @@ int elf2bin(Elf *elf, const char *outfile)
     perror(outfile);
     return 0;
   }
+  
+  printf("address   size      starting values...\n");
 
   /* loop over all sections */
   while (( scn = elf_nextscn(elf, scn)) != NULL ) 
