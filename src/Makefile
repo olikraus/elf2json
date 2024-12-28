@@ -36,11 +36,14 @@ release: all
 	
 #gprof: all
 
-all: elf2json
+all: elf2json elf2bin
 	
 elf2json: elf2json.o 
 	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
 
+elf2bin: elf2bin.o 
+	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
+
 clean:
-	-rm elf2json.o $(OBJ)
+	-rm elf2json.o elf2bin.o $(OBJ)
 	

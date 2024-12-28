@@ -1705,12 +1705,9 @@ int relf_show_section_addr_list(relf_struct *relf)
   relf_indent(indent);
   relf_oa();            // open array
   scn = elf_nextscn(relf->elf, NULL);
-  while ( scn != NULL ) 
+  //while ( scn != NULL ) 
   for(;;)
   {
-    
-    
-
     scn = get_section_by_address(relf->elf, &addr);
     if ( scn == NULL )
       break;
