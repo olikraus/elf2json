@@ -78,13 +78,16 @@ int elf2bin(Elf *elf, const char *outfile)
           break;
         
         block_addr = shdr.sh_addr + data->d_off;    // calculate the address of this data in the target system, not 100% sure whether this is correct
-        // data->d_size contains the size of the block, data->d_buf a ptr ot the internal memory
+        /* data->d_size contains the size of the block, data->d_buf a ptr to the internal memory */
         {
           size_t i;
           size_t cnt = data->d_size;
           if ( cnt > 16 )
             cnt = 16;
+          /* output address and size to stdout */
           printf("%08lx: %08lx ", (unsigned long)block_addr, (unsigned long)data->d_size);
+
+          /* output first 16 data values of the section */
           for( i = 0; i < cnt; i++ )
           {
             printf(" %02x", ((unsigned char *)data->d_buf)[i]);
