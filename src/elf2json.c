@@ -1741,7 +1741,8 @@ int main( int argc , char ** argv )
   if ( argc < 2)
     return 0;
   
-  relf_init(&relf, argv[1]);
+  if ( relf_init(&relf, argv[1]) == 0 )
+    return 0;
   relf_oo();
   relf_show_elf_header(&relf);
   relf_cn();

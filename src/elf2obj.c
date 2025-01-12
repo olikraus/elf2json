@@ -84,7 +84,10 @@ void __attribute__ ((noreturn)) __stack_chk_fail (void)
 /*==========================================*/
 
 
-/* returns a pointer to a memory location of y symbol */
+/* 
+  returns a pointer to a memory location of y symbol 
+  if NULL is returned, then there is either an error or the destination memory doesn't exist (BSS area).  
+*/
 void *get_symbol_mem_ptr(Elf *elf, GElf_Sym *symbol)
 {
   GElf_Shdr shdr;
@@ -110,7 +113,10 @@ void *get_symbol_mem_ptr(Elf *elf, GElf_Sym *symbol)
   */
   
   if ( shdr.sh_size == 0 )
+  {
+    // fprintf(stderr, "get_symbol_mem_ptr: shdr.sh_size == 0\n");
     return NULL;
+  }
   
   for(;;)
   {
@@ -118,12 +124,19 @@ void *get_symbol_mem_ptr(Elf *elf, GElf_Sym *symbol)
     if ( data == NULL )
       break;
     if ( data->d_buf == NULL )
-      break;
+    {
+      //fprintf(stderr, "get_symbol_mem_ptr: no buffer\n");
+      break;    // probably this is a BSS area
+    }
     block_addr = shdr.sh_addr + data->d_off;    // calculate the address of this data in the target system, not 100% sure whether this is correct
     //printf("block_addr=%08lx addr=%08lx d_buf=%p\n", block_addr, addr, data->d_buf);
     if ( addr >= block_addr && addr < block_addr+data->d_size )  // check if the requested addr is inside the current block
     {
       return data->d_buf + addr - block_addr;   // found
+    }
+    else
+    {
+      // fprintf(stderr, "get_symbol_mem_ptr: block_addr=%lu - %lu addr=%lu\n", block_addr, block_addr+data->d_size, addr);      
     }
   }  
   return NULL;
