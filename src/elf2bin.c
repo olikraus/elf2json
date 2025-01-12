@@ -51,6 +51,14 @@ int elf2bin(Elf *elf, const char *outfile)
   Elf_Scn  *scn  = NULL;
   GElf_Shdr shdr;
   size_t block_addr = 0;
+  
+  if ( elf_kind( elf ) != ELF_K_ELF )
+  {
+    fprintf(stderr, "Not an elf file (found kind %d)\n", elf_kind( elf ));
+    return 0;
+  }
+
+  
   int fd = creat(outfile, S_IRWXU);
   if ( fd < 0 )
   {
@@ -124,22 +132,15 @@ int main(int argc, char **argv)
   {
     if (( elf = elf_begin( fd , ELF_C_READ, NULL )) != NULL )
     {
-      if ( elf_kind( elf ) == ELF_K_ELF )
+      if ( elf2bin(elf, argv[2]) )
       {
-          if ( elf2bin(elf, argv[2]) )
-          {
-            elf_end(elf); 
-            close(fd);  
-            return 0;
-          }
-          else
-          {
-            fprintf(stderr, "Conversion failed\n");
-          }
+        elf_end(elf); 
+        close(fd);  
+        return 0;
       }
       else
       {
-        fprintf(stderr, "Not an elf file (found kind %d)\n", elf_kind( elf ));
+        fprintf(stderr, "Conversion failed\n");
       }
       elf_end(elf);
     }

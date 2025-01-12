@@ -510,7 +510,7 @@ elf_translate_struct et_sh_flags[] = {
   ETNONE()
 };
 
-/* GELF_ST_TYPE(st_bind) */
+/* GELF_ST_BIND(st_bind) */
 elf_translate_struct et_st_bind[] = {
   ET(STB_LOCAL, "Local symbol"),
   ET(STB_GLOBAL, "Global symbol"),
@@ -1140,7 +1140,6 @@ void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
 
 int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int sh_link)
 {
-  int i = 0;
   
   /*
     GElf_Sym contains the following members:  
@@ -1178,6 +1177,7 @@ int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int 
 
   
   */
+  int i = 0;
   GElf_Sym symbol;
   
   int indent = 6;
