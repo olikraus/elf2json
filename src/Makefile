@@ -12,9 +12,9 @@
 #
 
 
-debug: CFLAGS = -g -DCO_USE_ZLIB -Wall -I./co 
-sanitize: CFLAGS = -g -DCO_USE_ZLIB -Wall -fsanitize=address -I./co
-release: CFLAGS = -O4 -DNDEBUG -DCO_USE_ZLIB -Wall -I./co
+debug: CFLAGS = -g -Wall -I./co 
+sanitize: CFLAGS = -g -Wall -fsanitize=address -I./co
+release: CFLAGS = -O4 -DNDEBUG -Wall -I./co
 #gprof: CFLAGS = -g -pg -DCO_USE_ZLIB -Wall -I./co
 
 
@@ -48,5 +48,5 @@ elf2obj: elf2obj.o
 	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
 
 clean:
-	-rm elf2json.o elf2bin.o $(OBJ)
+	-rm elf2json.o elf2bin.o elf2obj.o elf2json elf2bin elf2obj $(OBJ)
 	
