@@ -240,20 +240,48 @@ elf_translate_struct et_elf_class[] = {
 };
 
 elf_translate_struct et_elf_osabi[] = {
+#ifdef ELFOSABI_SYSV
   ET( ELFOSABI_SYSV, "UNIX System V ABI "),
+#endif
+#ifdef ELFOSABI_HPUX
   ET( ELFOSABI_HPUX, "HP-UX "),
+#endif
+#ifdef ELFOSABI_NETBSD
   ET( ELFOSABI_NETBSD, "NetBSD.  "),
+#endif
+#ifdef ELFOSABI_GNU
   ET( ELFOSABI_GNU, "Object uses GNU ELF extensions.  "),
+#endif
+#ifdef ELFOSABI_SOLARIS
   ET( ELFOSABI_SOLARIS, "Sun Solaris.  "),
+#endif
+#ifdef ELFOSABI_AIX
   ET( ELFOSABI_AIX, "IBM AIX.  "),
+#endif
+#ifdef ELFOSABI_IRIX
   ET( ELFOSABI_IRIX, "SGI Irix.  "),
+#endif
+#ifdef ELFOSABI_FREEBSD
   ET( ELFOSABI_FREEBSD, "FreeBSD.  "),
+#endif
+#ifdef ELFOSABI_TRU64
   ET( ELFOSABI_TRU64, "Compaq TRU64 UNIX.  "),
+#endif
+#ifdef ELFOSABI_MODESTO
   ET( ELFOSABI_MODESTO, "Novell Modesto.  "),
+#endif
+#ifdef ELFOSABI_OPENBSD
   ET( ELFOSABI_OPENBSD, "OpenBSD.  "),
+#endif
+#ifdef ELFOSABI_ARM_AEABI
   ET( ELFOSABI_ARM_AEABI, "ARM EABI "),
+#endif
+#ifdef ELFOSABI_ARM
   ET( ELFOSABI_ARM, "ARM "),
+#endif
+#ifdef ELFOSABI_STANDALONE
   ET( ELFOSABI_STANDALONE, "Standalone (embedded) application "),
+#endif
   ETNONE()
 };
 
@@ -269,186 +297,547 @@ elf_translate_struct et_e_type[] = {
 
 elf_translate_struct et_e_machine[] = {
   ET( EM_NONE	, "No machine"),
+#ifdef EM_M32
   ET( EM_M32  , "AT&T WE 32100"),
+#endif
+#ifdef EM_SPARC
   ET( EM_SPARC	 , "SUN SPARC"),
+#endif
+#ifdef EM_386
   ET( EM_386     , "Intel 80386"),
+#endif
+#ifdef EM_68K
   ET( EM_68K	, "Motorola m68k family"),
+#endif
+#ifdef EM_88K
   ET( EM_88K	, "Motorola m88k family"),
-  ET( EM_IAMCU	 , "Intel MCU"),
+#endif
+#ifdef EM_IAMCU
+  //ET( EM_IAMCU	 , "Intel MCU"),				// not in mingw
+#endif
+#ifdef EM_860
   ET( EM_860	, "Intel 80860"),
+#endif
+#ifdef EM_MIPS
   ET( EM_MIPS	, "MIPS R3000 big-endian"),
+#endif
+#ifdef EM_S370
   ET( EM_S370	, "IBM System/370"),
+#endif
+#ifdef EM_MIPS_RS3_LE
   ET( EM_MIPS_RS3_LE, "MIPS R3000 little-endian"),
+#endif
+#ifdef EM_PARISC
   ET( EM_PARISC, "HPPA"),
+#endif
+#ifdef EM_VPP500
   ET( EM_VPP500, "Fujitsu VPP500"),
+#endif
+#ifdef EM_SPARC32PLUS
   ET( EM_SPARC32PLUS, "Sun's 'v8plus'"),
+#endif
+#ifdef EM_960
   ET( EM_960	, "Intel 80960"),
+#endif
+#ifdef EM_PPC
   ET( EM_PPC	, "PowerPC"),
+#endif
+#ifdef EM_PPC64
   ET( EM_PPC64, "PowerPC 64-bit"),
+#endif
+#ifdef EM_S390
   ET( EM_S390	, "IBM S390"),
-  ET( EM_SPU	, "IBM SPU/SPC"),
+#endif
+#ifdef EM_SPU
+  ET( EM_SPU	, "IBM SPU/SPC"),					// not in mingw
+#endif
+#ifdef EM_V800
   ET( EM_V800	, "NEC V800 series"),
+#endif
+#ifdef EM_FR20
   ET( EM_FR20	, "Fujitsu FR20"),
+#endif
+#ifdef EM_RH32
   ET( EM_RH32	, "TRW RH-32"),
+#endif
+#ifdef EM_RCE
   ET( EM_RCE	, "Motorola RCE"),
+#endif
+#ifdef EM_ARM
   ET( EM_ARM	, "ARM"),
-  ET( EM_FAKE_ALPHA, "Digital Alpha"),
+#endif
+#ifdef EM_FAKE_ALPHA
+  ET( EM_FAKE_ALPHA, "Digital Alpha"),			// not in mingw
+#endif
+#ifdef EM_SH
   ET( EM_SH	, "Hitachi SH"),
+#endif
+#ifdef EM_SPARCV9
   ET( EM_SPARCV9, "SPARC v9 64-bit"),
+#endif
+#ifdef EM_TRICORE
   ET( EM_TRICORE, "Siemens Tricore"),
+#endif
+#ifdef EM_ARC
   ET( EM_ARC	, "Argonaut RISC Core"),
+#endif
+#ifdef EM_H8_300
   ET( EM_H8_300, "Hitachi H8/300"),
+#endif
+#ifdef EM_H8_300H
   ET( EM_H8_300H, "Hitachi H8/300H"),
+#endif
+#ifdef EM_H8S
   ET( EM_H8S	, "Hitachi H8S"),
+#endif
+#ifdef EM_H8_500
   ET( EM_H8_500, "Hitachi H8/500"),
+#endif
+#ifdef EM_IA_64
   ET( EM_IA_64, "Intel Merced"),
+#endif
+#ifdef EM_MIPS_X
   ET( EM_MIPS_X, "Stanford MIPS-X"),
+#endif
+#ifdef EM_COLDFIRE
   ET( EM_COLDFIRE, "Motorola Coldfire"),
+#endif
+#ifdef EM_68HC12
   ET( EM_68HC12, "Motorola M68HC12"),
+#endif
+#ifdef EM_MMA
   ET( EM_MMA	, "Fujitsu MMA Multimedia Accelerator"),
+#endif
+#ifdef EM_PCP
   ET( EM_PCP	, "Siemens PCP"),
+#endif
+#ifdef EM_NCPU
   ET( EM_NCPU	, "Sony nCPU embedded RISC"),
+#endif
+#ifdef EM_NDR1
   ET( EM_NDR1	, "Denso NDR1 microprocessor"),
+#endif
+#ifdef EM_STARCORE
   ET( EM_STARCORE, "Motorola Start*Core processor"),
+#endif
+#ifdef EM_ME16
   ET( EM_ME16	, "Toyota ME16 processor"),
+#endif
+#ifdef EM_ST100
   ET( EM_ST100, "STMicroelectronic ST100 processor"),
+#endif
+#ifdef EM_TINYJ
   ET( EM_TINYJ, "Advanced Logic Corp. Tinyj emb.fam"),
+#endif
+#ifdef EM_X86_64
   ET( EM_X86_64, "AMD x86-64 architecture"),
+#endif
+#ifdef EM_PDSP
   ET( EM_PDSP	, "Sony DSP Processor"),
-  ET( EM_PDP10, "Digital PDP-10"),
-  ET( EM_PDP11, "Digital PDP-11"),
+#endif
+#ifdef EM_PDP10
+  ET( EM_PDP10, "Digital PDP-10"),				// not in mingw
+#endif
+#ifdef EM_PDP11
+  ET( EM_PDP11, "Digital PDP-11"),				// not in mingw
+#endif
+#ifdef EM_FX66
   ET( EM_FX66	, "Siemens FX66 microcontroller"),
+#endif
+#ifdef EM_ST9PLUS
   ET( EM_ST9PLUS, "STMicroelectronics ST9+ 8/16 mc"),
+#endif
+#ifdef EM_ST7
   ET( EM_ST7	, "STmicroelectronics ST7 8 bit mc"),
+#endif
+#ifdef EM_68HC16
   ET( EM_68HC16, "Motorola MC68HC16 microcontroller"),
+#endif
+#ifdef EM_68HC11
   ET( EM_68HC11, "Motorola MC68HC11 microcontroller"),
+#endif
+#ifdef EM_68HC08
   ET( EM_68HC08, "Motorola MC68HC08 microcontroller"),
+#endif
+#ifdef EM_68HC05
   ET( EM_68HC05, "Motorola MC68HC05 microcontroller"),
+#endif
+#ifdef EM_SVX
   ET( EM_SVX	, "Silicon Graphics SVx"),
+#endif
+#ifdef EM_ST19
   ET( EM_ST19	, "STMicroelectronics ST19 8 bit mc"),
+#endif
+#ifdef EM_VAX
   ET( EM_VAX	, "Digital VAX"),
+#endif
+#ifdef EM_CRIS
   ET( EM_CRIS	, "Axis Communications 32-bit emb.proc"),
+#endif
+#ifdef EM_JAVELIN
   ET( EM_JAVELIN, "Infineon Technologies 32-bit emb.proc"),
+#endif
+#ifdef EM_FIREPATH
   ET( EM_FIREPATH, "Element 14 64-bit DSP Processor"),
+#endif
+#ifdef EM_ZSP
   ET( EM_ZSP	, "LSI Logic 16-bit DSP Processor"),
+#endif
+#ifdef EM_MMIX
   ET( EM_MMIX	, "Donald Knuth's educational 64-bit proc"),
+#endif
+#ifdef EM_HUANY
   ET( EM_HUANY, "Harvard University machine-independent object files"),
+#endif
+#ifdef EM_PRISM
   ET( EM_PRISM, "SiTera Prism"),
+#endif
+#ifdef EM_AVR
   ET( EM_AVR	, "Atmel AVR 8-bit microcontroller"),
+#endif
+#ifdef EM_FR30
   ET( EM_FR30	, "Fujitsu FR30"),
+#endif
+#ifdef EM_D10V
   ET( EM_D10V	, "Mitsubishi D10V"),
+#endif
+#ifdef EM_D30V
   ET( EM_D30V	, "Mitsubishi D30V"),
+#endif
+#ifdef EM_V850
   ET( EM_V850	, "NEC v850"),
+#endif
+#ifdef EM_M32R
   ET( EM_M32R	, "Mitsubishi M32R"),
+#endif
+#ifdef EM_MN10300
   ET( EM_MN10300, "Matsushita MN10300"),
+#endif
+#ifdef EM_MN10200
   ET( EM_MN10200, "Matsushita MN10200"),
+#endif
+#ifdef EM_PJ
   ET( EM_PJ	, "picoJava"),
+#endif
+#ifdef EM_OPENRISC
   ET( EM_OPENRISC, "OpenRISC 32-bit embedded processor"),
-  ET( EM_ARC_COMPACT, "ARC International ARCompact"),
+#endif
+#ifdef EM_ARC_COMPACT
+  ET( EM_ARC_COMPACT, "ARC International ARCompact"),		// not in mingw
+#endif
+#ifdef EM_XTENSA
   ET( EM_XTENSA, "Tensilica Xtensa Architecture"),
+#endif
+#ifdef EM_VIDEOCORE
   ET( EM_VIDEOCORE, "Alphamosaic VideoCore"),
+#endif
+#ifdef EM_TMM_GPP
   ET( EM_TMM_GPP, "Thompson Multimedia General Purpose Proc"),
+#endif
+#ifdef EM_NS32K
   ET( EM_NS32K, "National Semi. 32000"),
+#endif
+#ifdef EM_TPC
   ET( EM_TPC	, "Tenor Network TPC"),
+#endif
+#ifdef EM_SNP1K
   ET( EM_SNP1K, "Trebia SNP 1000"),
+#endif
+#ifdef EM_ST200
   ET( EM_ST200, "STMicroelectronics ST200"),
+#endif
+#ifdef EM_IP2K
   ET( EM_IP2K	, "Ubicom IP2xxx"),
+#endif
+#ifdef EM_MAX
   ET( EM_MAX	, "MAX processor"),
+#endif
+#ifdef EM_CR
   ET( EM_CR	, "National Semi. CompactRISC"),
+#endif
+#ifdef EM_F2MC16
   ET( EM_F2MC16, "Fujitsu F2MC16"),
+#endif
+#ifdef EM_MSP430
   ET( EM_MSP430, "Texas Instruments msp430"),
+#endif
+#ifdef EM_BLACKFIN
   ET( EM_BLACKFIN, "Analog Devices Blackfin DSP"),
+#endif
+#ifdef EM_SE_C33
   ET( EM_SE_C33, "Seiko Epson S1C33 family"),
+#endif
+#ifdef EM_SEP
   ET( EM_SEP	, "Sharp embedded microprocessor"),
+#endif
+#ifdef EM_ARCA
   ET( EM_ARCA	, "Arca RISC"),
+#endif
+#ifdef EM_UNICORE
   ET( EM_UNICORE, "PKU-Unity & MPRC Peking Uni. mc series"),
-  ET( EM_EXCESS, "eXcess configurable cpu"),
-  ET( EM_DXP	, "Icera Semi. Deep Execution Processor"),
-  ET( EM_ALTERA_NIOS2, "Altera Nios II"),
-  ET( EM_CRX	, "National Semi. CompactRISC CRX"),
-  ET( EM_XGATE, "Motorola XGATE"),
-  ET( EM_C166	, "Infineon C16x/XC16x"),
-  ET( EM_M16C	, "Renesas M16C"),
-  ET( EM_DSPIC30F, "Microchip Technology dsPIC30F"),
-  ET( EM_CE	, "Freescale Communication Engine RISC"),
-  ET( EM_M32C	, "Renesas M32C"),
-  ET( EM_TSK3000, "Altium TSK3000"),
-  ET( EM_RS08	, "Freescale RS08"),
-  ET( EM_SHARC, "Analog Devices SHARC family"),
-  ET( EM_ECOG2, "Cyan Technology eCOG2"),
-  ET( EM_SCORE7, "Sunplus S+core7 RISC"),
-  ET( EM_DSP24, "New Japan Radio (NJR) 24-bit DSP"),
-  ET( EM_VIDEOCORE3, "Broadcom VideoCore III"),
-  ET( EM_LATTICEMICO32, "RISC for Lattice FPGA"),
-  ET( EM_SE_C17, "Seiko Epson C17"),
-  ET( EM_TI_C6000, "Texas Instruments TMS320C6000 DSP"),
-  ET( EM_TI_C2000, "Texas Instruments TMS320C2000 DSP"),
-  ET( EM_TI_C5500, "Texas Instruments TMS320C55x DSP"),
-  ET( EM_TI_ARP32, "Texas Instruments App. Specific RISC"),
-  ET( EM_TI_PRU, "Texas Instruments Prog. Realtime Unit"),
-  ET( EM_MMDSP_PLUS, "STMicroelectronics 64bit VLIW DSP"),
-  ET( EM_CYPRESS_M8C, "Cypress M8C"),
-  ET( EM_R32C	, "Renesas R32C"),
-  ET( EM_TRIMEDIA, "NXP Semi. TriMedia"),
+#endif
+#ifdef EM_EXCESS
+  ET( EM_EXCESS, "eXcess configurable cpu"),		// not in mingw
+#endif
+#ifdef EM_DXP
+  ET( EM_DXP	, "Icera Semi. Deep Execution Processor"),		// not in mingw
+#endif
+#ifdef EM_ALTERA_NIOS2
+  ET( EM_ALTERA_NIOS2, "Altera Nios II"),					// not in mingw
+#endif
+#ifdef EM_CRX
+  ET( EM_CRX	, "National Semi. CompactRISC CRX"),				// not in mingw
+#endif
+#ifdef EM_XGATE
+  ET( EM_XGATE, "Motorola XGATE"),							// not in mingw
+#endif
+#ifdef EM_C166
+  ET( EM_C166	, "Infineon C16x/XC16x"),						// not in mingw
+#endif
+#ifdef EM_M16C
+  ET( EM_M16C	, "Renesas M16C"),										// not in mingw
+#endif
+#ifdef EM_DSPIC30F
+  ET( EM_DSPIC30F, "Microchip Technology dsPIC30F"),		// not in mingw
+#endif
+#ifdef EM_CE
+  ET( EM_CE	, "Freescale Communication Engine RISC"),		// not in mingw
+#endif
+#ifdef EM_M32C
+  ET( EM_M32C	, "Renesas M32C"),		// not in mingw
+#endif
+#ifdef EM_TSK3000
+  ET( EM_TSK3000, "Altium TSK3000"),		// not in mingw
+#endif
+#ifdef EM_RS08
+  ET( EM_RS08	, "Freescale RS08"),		// not in mingw
+#endif
+#ifdef EM_SHARC
+  ET( EM_SHARC, "Analog Devices SHARC family"),		// not in mingw
+#endif
+#ifdef EM_ECOG2
+  ET( EM_ECOG2, "Cyan Technology eCOG2"),		// not in mingw
+#endif
+#ifdef EM_SCORE7
+  ET( EM_SCORE7, "Sunplus S+core7 RISC"),		// not in mingw
+#endif
+#ifdef EM_DSP24
+  ET( EM_DSP24, "New Japan Radio (NJR) 24-bit DSP"),		// not in mingw
+#endif
+#ifdef EM_VIDEOCORE3
+  ET( EM_VIDEOCORE3, "Broadcom VideoCore III"),		// not in mingw
+#endif
+#ifdef EM_LATTICEMICO32
+  ET( EM_LATTICEMICO32, "RISC for Lattice FPGA"),		// not in mingw
+#endif
+#ifdef EM_SE_C17
+  ET( EM_SE_C17, "Seiko Epson C17"),		// not in mingw
+#endif
+#ifdef EM_TI_C6000
+  ET( EM_TI_C6000, "Texas Instruments TMS320C6000 DSP"),		// not in mingw
+#endif
+#ifdef EM_TI_C2000
+  ET( EM_TI_C2000, "Texas Instruments TMS320C2000 DSP"),		// not in mingw
+#endif
+#ifdef EM_TI_C5500
+  ET( EM_TI_C5500, "Texas Instruments TMS320C55x DSP"),		// not in mingw
+#endif
+#ifdef EM_TI_ARP32
+  ET( EM_TI_ARP32, "Texas Instruments App. Specific RISC"),		// not in mingw
+#endif
+#ifdef EM_TI_PRU
+  ET( EM_TI_PRU, "Texas Instruments Prog. Realtime Unit"),		// not in mingw
+#endif
+#ifdef EM_MMDSP_PLUS
+  ET( EM_MMDSP_PLUS, "STMicroelectronics 64bit VLIW DSP"),		// not in mingw
+#endif
+#ifdef EM_CYPRESS_M8C
+  ET( EM_CYPRESS_M8C, "Cypress M8C"),		// not in mingw
+#endif
+#ifdef EM_R32C
+  ET( EM_R32C	, "Renesas R32C"),		// not in mingw
+#endif
+#ifdef EM_TRIMEDIA
+  ET( EM_TRIMEDIA, "NXP Semi. TriMedia"),		// not in mingw
+#endif
+
+#ifdef EM_QDSP6
   ET( EM_QDSP6, "QUALCOMM DSP6"),
+#endif
+#ifdef EM_8051
   ET( EM_8051	, "Intel 8051 and variants"),
+#endif
+#ifdef EM_STXP7X
   ET( EM_STXP7X, "STMicroelectronics STxP7x"),
+#endif
+#ifdef EM_NDS32
   ET( EM_NDS32, "Andes Tech. compact code emb. RISC"),
+#endif
+#ifdef EM_ECOG1X
   ET( EM_ECOG1X, "Cyan Technology eCOG1X"),
+#endif
+#ifdef EM_MAXQ30
   ET( EM_MAXQ30, "Dallas Semi. MAXQ30 mc"),
+#endif
+#ifdef EM_XIMO16
   ET( EM_XIMO16, "New Japan Radio (NJR) 16-bit DSP"),
+#endif
+#ifdef EM_MANIK
   ET( EM_MANIK, "M2000 Reconfigurable RISC"),
+#endif
+#ifdef EM_CRAYNV2
   ET( EM_CRAYNV2, "Cray NV2 vector architecture"),
+#endif
+#ifdef EM_RX
   ET( EM_RX	, "Renesas RX"),
+#endif
+#ifdef EM_METAG
   ET( EM_METAG, "Imagination Tech. META"),
+#endif
+#ifdef EM_MCST_ELBRUS
   ET( EM_MCST_ELBRUS, "MCST Elbrus"),
+#endif
+#ifdef EM_ECOG16
   ET( EM_ECOG16, "Cyan Technology eCOG16"),
+#endif
+#ifdef EM_CR16
   ET( EM_CR16	, "National Semi. CompactRISC CR16"),
+#endif
+#ifdef EM_ETPU
   ET( EM_ETPU	, "Freescale Extended Time Processing Unit"),
+#endif
+#ifdef EM_SLE9X
   ET( EM_SLE9X, "Infineon Tech. SLE9X"),
+#endif
+#ifdef EM_L10M
   ET( EM_L10M	, "Intel L10M"),
+#endif
+#ifdef EM_K10M
   ET( EM_K10M	, "Intel K10M"),
+#endif
+#ifdef EM_AARCH64
   ET( EM_AARCH64, "ARM AARCH64"),
+#endif
+#ifdef EM_AVR32
   ET( EM_AVR32, "Amtel 32-bit microprocessor"),
+#endif
+#ifdef EM_STM8
   ET( EM_STM8	, "STMicroelectronics STM8"),
+#endif
+#ifdef EM_TILE64
   ET( EM_TILE64, "Tilera TILE64"),
+#endif
+#ifdef EM_TILEPRO
   ET( EM_TILEPRO, "Tilera TILEPro"),
+#endif
+#ifdef EM_MICROBLAZE
   ET( EM_MICROBLAZE, "Xilinx MicroBlaze"),
+#endif
+#ifdef EM_CUDA
   ET( EM_CUDA	, "NVIDIA CUDA"),
+#endif
+#ifdef EM_TILEGX
   ET( EM_TILEGX, "Tilera TILE-Gx"),
+#endif
+#ifdef EM_CLOUDSHIELD
   ET( EM_CLOUDSHIELD, "CloudShield"),
+#endif
+#ifdef EM_COREA_1ST
   ET( EM_COREA_1ST, "KIPO-KAIST Core-A 1st gen."),
+#endif
+#ifdef EM_COREA_2ND
   ET( EM_COREA_2ND, "KIPO-KAIST Core-A 2nd gen."),
+#endif
+#ifdef EM_ARCV2
   ET( EM_ARCV2, "Synopsys ARCv2 ISA. "),
+#endif
+#ifdef EM_OPEN8
   ET( EM_OPEN8, "Open8 RISC"),
+#endif
+#ifdef EM_RL78
   ET( EM_RL78	, "Renesas RL78"),
+#endif
+#ifdef EM_VIDEOCORE5
   ET( EM_VIDEOCORE5, "Broadcom VideoCore V"),
+#endif
+#ifdef EM_78KOR
   ET( EM_78KOR, "Renesas 78KOR"),
+#endif
+#ifdef EM_56800EX
   ET( EM_56800EX, "Freescale 56800EX DSC"),
+#endif
+#ifdef EM_BA1
   ET( EM_BA1	, "Beyond BA1"),
+#endif
+#ifdef EM_BA2
   ET( EM_BA2	, "Beyond BA2"),
+#endif
+#ifdef EM_XCORE
   ET( EM_XCORE, "XMOS xCORE"),
+#endif
+#ifdef EM_MCHP_PIC
   ET( EM_MCHP_PIC, "Microchip 8-bit PIC(r)"),
+#endif
+#ifdef EM_INTELGT
   ET( EM_INTELGT, "Intel Graphics Technology"),
+#endif
+#ifdef EM_KM32
   ET( EM_KM32	, "KM211 KM32"),
+#endif
+#ifdef EM_KMX32
   ET( EM_KMX32, "KM211 KMX32"),
+#endif
+#ifdef EM_EMX16
   ET( EM_EMX16, "KM211 KMX16"),
+#endif
+#ifdef EM_EMX8
   ET( EM_EMX8	, "KM211 KMX8"),
+#endif
+#ifdef EM_KVARC
   ET( EM_KVARC, "KM211 KVARC"),
+#endif
+#ifdef EM_CDP
   ET( EM_CDP	, "Paneve CDP"),
+#endif
+#ifdef EM_COGE
   ET( EM_COGE	, "Cognitive Smart Memory Processor"),
+#endif
+#ifdef EM_COOL
   ET( EM_COOL	, "Bluechip CoolEngine"),
+#endif
+#ifdef EM_NORC
   ET( EM_NORC	, "Nanoradio Optimized RISC"),
+#endif
+#ifdef EM_CSR_KALIMBA
   ET( EM_CSR_KALIMBA, "CSR Kalimba"),
+#endif
+#ifdef EM_Z80
   ET( EM_Z80	, "Zilog Z80"),
+#endif
+#ifdef EM_VISIUM
   ET( EM_VISIUM, "Controls and Data Services VISIUMcore"),
+#endif
+#ifdef EM_FT32
   ET( EM_FT32	, "FTDI Chip FT32"),
+#endif
+#ifdef EM_MOXIE
   ET( EM_MOXIE, "Moxie processor"),
+#endif
+#ifdef EM_AMDGPU
   ET( EM_AMDGPU, "AMD GPU"),
+#endif
+#ifdef EM_RISCV
   ET( EM_RISCV, "RISC-V"),
+#endif
+#ifdef EM_BPF
   ET( EM_BPF	, "Linux BPF -- in-kernel virtual machine"),
+#endif
+#ifdef EM_CSKY
   ET( EM_CSKY	    , "C-SKY"),
+#endif
+#ifdef EM_LOONGARCH
   ET( EM_LOONGARCH, "LoongArch"),
+#endif
   ETNONE()
 };
 
@@ -490,7 +879,9 @@ elf_translate_struct et_sh_type[] = {
   ET(SHT_PREINIT_ARRAY, "Array of pre-constructors"),
   ET(SHT_GROUP, "Section group"),
   ET(SHT_SYMTAB_SHNDX , "Extended section indices"),
+#ifdef SHT_RELR
   ET(SHT_RELR, "RELR relative relocations"),
+#endif
   ETNONE()
 };
 
@@ -506,7 +897,9 @@ elf_translate_struct et_sh_flags[] = {
   ET(SHF_OS_NONCONFORMING, "Non-standard OS specific handling required"),
   ET(SHF_GROUP, "Section is member of a group. "),
   ET(SHF_TLS, "Section hold thread-local data. "),
+#ifdef SHF_COMPRESSED
   ET(SHF_COMPRESSED, "Section with compressed data."),
+#endif
   ETNONE()
 };
 
@@ -516,7 +909,9 @@ elf_translate_struct et_st_bind[] = {
   ET(STB_GLOBAL, "Global symbol"),
   ET(STB_WEAK, "Weak symbol"),
   ET(STB_NUM, "Number of defined types."),
+#ifdef STB_GNU_UNIQUE
   ET(STB_GNU_UNIQUE, "Unique symbol."),
+#endif
   ETNONE()
 };
 
@@ -530,7 +925,9 @@ elf_translate_struct et_st_type[] = {
   ET(STT_COMMON, "Symbol is a common data object"),
   ET(STT_TLS, "Symbol is thread-local data object"),
   ET(STT_NUM, "Number of defined types. "),
+#ifdef STT_GNU_IFUNC
   ET(STT_GNU_IFUNC, "Symbol is indirect code object"),
+#endif
   ETNONE()
 };
 
@@ -560,19 +957,45 @@ elf_translate_struct et_d_type[] = {
   ET(ELF_T_WORD,                   "Elf32_Word, Elf64_Word, ..."),
   ET(ELF_T_XWORD,                  "Elf32_Xword, Elf64_Xword, ..."),
   ET(ELF_T_SXWORD,                 "Elf32_Sxword, Elf64_Sxword, ..."),
+#ifdef ELF_T_VDEF
   ET(ELF_T_VDEF,                   "Elf32_Verdef, Elf64_Verdef, ..."),
+#endif
+#ifdef ELF_T_VDAUX
   ET(ELF_T_VDAUX,                  "Elf32_Verdaux, Elf64_Verdaux, ..."),
+#endif
+#ifdef ELF_T_VNEED
   ET(ELF_T_VNEED,                  "Elf32_Verneed, Elf64_Verneed, ..."),
+#endif
+#ifdef ELF_T_VNAUX
   ET(ELF_T_VNAUX,                  "Elf32_Vernaux, Elf64_Vernaux, ..."),
+#endif
+#ifdef ELF_T_NHDR
   ET(ELF_T_NHDR,                   "Elf32_Nhdr, Elf64_Nhdr, ..."),
+#endif
+#ifdef ELF_T_SYMINFO
   ET(ELF_T_SYMINFO,		"Elf32_Syminfo, Elf64_Syminfo, ..."),
+#endif
+#ifdef ELF_T_MOVE
   ET(ELF_T_MOVE,			"Elf32_Move, Elf64_Move, ..."),
+#endif
+#ifdef ELF_T_LIB
   ET(ELF_T_LIB,			"Elf32_Lib, Elf64_Lib, ..."),
+#endif
+#ifdef ELF_T_GNUHASH
   ET(ELF_T_GNUHASH,		"GNU-style hash section. "),
+#endif
+#ifdef ELF_T_AUXV
   ET(ELF_T_AUXV,			"Elf32_auxv_t, Elf64_auxv_t, ..."),
+#endif
+#ifdef ELF_T_CHDR
   ET(ELF_T_CHDR,			"Compressed, Elf32_Chdr, Elf64_Chdr, ..."),
+#endif
+#ifdef ELF_T_NHDR8
   ET(ELF_T_NHDR8,			"Special GNU Properties note.  Same as Nhdr, except padding."),
+#endif
+#ifdef ELF_T_RELR
   ET(ELF_T_RELR,			"Relative relocation entry."),
+#endif
   ETNONE()
 };
 
@@ -612,10 +1035,18 @@ elf_translate_struct et_d_tag[] = {
   ET(  DT_ENCODING	, "Start of encoded range"),
   ET(  DT_PREINIT_ARRAY , "Array with addresses of preinit fct"),
   ET(  DT_PREINIT_ARRAYSZ , "size in bytes of DT_PREINIT_ARRAY"),
+#ifdef DT_SYMTAB_SHNDX
   ET(  DT_SYMTAB_SHNDX , "Address of SYMTAB_SHNDX section"),
+#endif
+#ifdef DT_RELRSZ
   ET(  DT_RELRSZ	        , "Total size of RELR relative relocations"),
+#endif
+#ifdef DT_RELR
   ET(  DT_RELR		        , "Address of RELR relative relocations"),
+#endif
+#ifdef DT_RELRENT
   ET(  DT_RELRENT	        , "Size of one RELR relative relocaction"),
+#endif
   ETNONE()
 };
 
@@ -1108,7 +1539,7 @@ void *relf_get_mem_ptr(relf_struct *relf, size_t section_index, size_t addr)
   
   scn = elf_getscn (relf->elf,  section_index);  
   if ( scn == NULL )
-    return fprintf(stderr, "libelf: %s, section_index=%ld \n", elf_errmsg(-1), section_index), NULL;
+    return fprintf(stderr, "libelf: %s, section_index=%lld \n", elf_errmsg(-1), (long long int)section_index), NULL;
   if ( gelf_getshdr( scn, &shdr ) != &shdr )
     return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
 
@@ -1244,9 +1675,11 @@ int relf_show_symbol_data(relf_struct *relf, Elf_Scn  *scn, Elf_Data *data, int 
     relf_cn();
     relf_indent(indent+1);
     relf_show_pure_value("st_other", symbol.st_other);
+#ifdef GELF_ST_VISIBILITY
     relf_cn();    
     relf_indent(indent+1);
     relf_show_et_value(et_st_visibility, "ST_VISIBILITY", GELF_ST_VISIBILITY(symbol.st_other));
+#endif 
     //relf_cn();
     
     if ( symbol.st_shndx > 0 )

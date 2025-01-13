@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <libelf.h>
 #include <gelf.h>
@@ -58,7 +59,7 @@ int elf2bin(Elf *elf, const char *outfile)
     return 0;
   }
 
-  
+  // S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
   int fd = creat(outfile, S_IRWXU);
   if ( fd < 0 )
   {

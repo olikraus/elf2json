@@ -103,7 +103,7 @@ void *get_symbol_mem_ptr(Elf *elf, GElf_Sym *symbol)
   
   scn = elf_getscn(elf,  section_index);  
   if ( scn == NULL )
-    return fprintf(stderr, "libelf: %s, section_index=%ld \n", elf_errmsg(-1), section_index), NULL;
+    return fprintf(stderr, "libelf: %s, section_index=%llu \n", elf_errmsg(-1), (long long unsigned)section_index), NULL;
   if ( gelf_getshdr( scn, &shdr ) != &shdr )
     return fprintf(stderr, "libelf: %s\n", elf_errmsg(-1)), NULL;
 
@@ -209,7 +209,13 @@ int elf2obj(Elf *elf, const char *outfile)
                   // symbol.st_shndx            section where the symbol content is located
                   // symbol.st_value            address of the symbol on the host
                   void *sym_ptr = get_symbol_mem_ptr(elf, &symbol);   // return value could be NULL
-                  printf("section %s, data blk size %lu, type %c, val %8lu, size %8lu, ptr %8p, scn %3d, symbol %s\n", section_name, data->d_size, symbol_type == STT_FUNC ? 'F' : 'O', symbol.st_value, symbol.st_size, sym_ptr, symbol.st_shndx, symbol_name);
+                  printf("section %s, data blk size %llu, type %c, val %8llu, size %8llu, ptr %8p, scn %3d, symbol %s\n", 
+						section_name, 
+						(long long unsigned)data->d_size, 
+						symbol_type == STT_FUNC ? 'F' : 'O', 
+						(long long unsigned)symbol.st_value, 
+						(long long unsigned)symbol.st_size, 
+						sym_ptr, symbol.st_shndx, symbol_name);
                 } // existing & none-empty symbols
               } // symbol is function or object
             } // symbol with bind == STB_GLOBAL
