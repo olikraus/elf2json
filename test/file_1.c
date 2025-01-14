@@ -1,6 +1,7 @@
 // gcc -g file_1.c file_2.c -o file.elf && dwarfdump file.elf > file.out
 
 extern int file_2_b;
+//extern int file_1_a;
 void file_2_fn(void);
 
 int file_1_a = 4;

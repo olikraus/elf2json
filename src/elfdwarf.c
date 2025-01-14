@@ -19,7 +19,46 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   Show dwarf information of a elf file
-  
+
+  Notes:
+
+  A variable definition (the unit where it occupies memory) contains the 
+    DW_AT_location
+  attribute.
+  Example:
+    DW_TAG_variable (52): name 'file_2_b', code 2, attr cnt 7
+    - 01/07 DW_AT_name (3)/DW_FORM_strp (14) 'file_2_b'
+    - 02/07 DW_AT_decl_file (58)/DW_FORM_data1 (11) '1/0x1'
+    - 03/07 DW_AT_decl_line (59)/DW_FORM_data1 (11) '4/0x4'
+    - 04/07 DW_AT_decl_column (57)/DW_FORM_data1 (11) '5/0x5'
+    - 05/07 DW_AT_type (73)/DW_FORM_ref4 (19) '210/0xd2'
+    - 06/07 DW_AT_external (63)/DW_FORM_flag_present (25) ''
+    - 07/07 DW_AT_location (2)/DW_FORM_exprloc (24) ''
+  If both a definition and declartion exists (declaration first), then there are two entries:
+    DW_TAG_variable (52): name 'file_2_b', code 2, attr cnt 7
+    - 01/07 DW_AT_name (3)/DW_FORM_strp (14) 'file_2_b'
+    - 02/07 DW_AT_decl_file (58)/DW_FORM_data1 (11) '1/0x1'
+    - 03/07 DW_AT_decl_line (59)/DW_FORM_data1 (11) '3/0x3'
+    - 04/07 DW_AT_decl_column (57)/DW_FORM_data1 (11) '12/0xc'
+    - 05/07 DW_AT_type (73)/DW_FORM_ref4 (19) '200/0xc8'
+    - 06/07 DW_AT_external (63)/DW_FORM_flag_present (25) ''
+    - 07/07 DW_AT_declaration (60)/DW_FORM_flag_present (25) ''
+  DW_TAG_variable (52): name 'n.a.', code 4, attr cnt 4
+    - 01/04 DW_AT_specification (71)/DW_FORM_ref4 (19) '188/0xbc'
+    - 02/04 DW_AT_decl_line (59)/DW_FORM_data1 (11) '4/0x4'
+    - 03/04 DW_AT_decl_column (57)/DW_FORM_data1 (11) '5/0x5'
+    - 04/04 DW_AT_location (2)/DW_FORM_exprloc (24) ''
+  The DW_AT_specification refers to the previous declaration
+  If the definition is first and the declaration follows later (doesn't make much sense),
+  then again there is only one entry.
+
+
+
+  Get DIE by offset:
+    int dwarf_offdie(Dwarf_Debug	dbg,   Dwarf_Off offset,   Dwarf_Die *ret_die, Dwarf_Error *err);
+
+  Get offset of the DIE
+  int dwarf_dieoffset(Dwarf_Die die, Dwarf_Off *ret_offset, Dwarf_Error *err);
 */
 
 #include <stdio.h>
@@ -570,7 +609,45 @@ void print_indent(int indent)
 }
 
 
-int show_die(int indent, Dwarf_Die die)
+/*
+  get unsigned integer value of an attribute.
+  do this by trying several form functions
+  partly taken over from dwarfdump
+*/
+int dwarf_get_unsigned_attribute_value(Dwarf_Attribute attribute, Dwarf_Unsigned *uval_out, Dwarf_Error *err)
+{
+    Dwarf_Unsigned uval = 0;
+    int ret = dwarf_formudata(attribute, &uval, err);
+    if (ret != DW_DLV_OK) 
+    {
+        Dwarf_Signed sval = 0;
+        ret = dwarf_formsdata(attribute, &sval, err);
+        if (ret != DW_DLV_OK) 
+        {
+            ret = dwarf_global_formref(attribute,&uval,err);
+            if (ret != DW_DLV_OK) 
+            {
+                return ret;
+            }
+            else
+            {
+              *uval_out = uval;
+            }
+        } 
+        else 
+        {
+            *uval_out = (Dwarf_Unsigned)sval;
+        }
+    } 
+    else 
+    {
+        *uval_out = uval;
+    }
+    return DW_DLV_OK;
+}
+
+
+int show_die(Dwarf_Debug dbg, int indent, Dwarf_Die die)
 {
   Dwarf_Error err;
   Dwarf_Half tag;
@@ -579,6 +656,7 @@ int show_die(int indent, Dwarf_Die die)
   
   Dwarf_Signed attr_count, i;
   Dwarf_Attribute *attr_list;  
+  Dwarf_Off offset;
 
   if ( dwarf_tag(die, &tag, &err)  != DW_DLV_OK)
     return fprintf(stderr, "dwarf_tag: %s\n", dwarf_errmsg(err) ), 0;
@@ -592,8 +670,11 @@ int show_die(int indent, Dwarf_Die die)
   if ( dwarf_attrlist(die, &attr_list, &attr_count, &err) != DW_DLV_OK)
     attr_count = 0;
   
+  if ( dwarf_dieoffset(die, &offset, &err) != DW_DLV_OK)
+    offset = 0;
+  
   print_indent(indent);
-  printf("%s (%u): name '%s', code %d, attr cnt %lld\n", dwarf_id2str(dwarf_tags, tag), (unsigned)tag, name, abbrev_code, (long long int)attr_count);
+  printf("<0x%08llx> %s (%u): name '%s', code %d, attr cnt %lld\n", (long long unsigned)offset, dwarf_id2str(dwarf_tags, tag), (unsigned)tag, name, abbrev_code, (long long int)attr_count);
   
   for( i = 0; i < attr_count; i++ )
   {
@@ -620,7 +701,7 @@ int show_die(int indent, Dwarf_Die die)
     */
     if ( dwarf_formstring(attr_list[i], &str, &err) != DW_DLV_OK )
     {
-      if ( dwarf_formudata(attr_list[i], &uval, &err) == DW_DLV_OK )
+      if ( dwarf_get_unsigned_attribute_value(attr_list[i], &uval, &err) == DW_DLV_OK )
       {
         sprintf(buf, "%llu/0x%llx", (long long unsigned)uval, (long long unsigned)uval);
         str = buf;
@@ -645,6 +726,12 @@ int show_die(int indent, Dwarf_Die die)
       dwarf_id2str(dwarf_forms, form), form,
       str
     );
+    if ( attr_num == DW_AT_specification )
+    {
+        Dwarf_Die spec_die;
+        if ( dwarf_offdie(dbg, (Dwarf_Off)uval, &spec_die, &err) == DW_DLV_OK )
+          show_die(dbg, indent+2, spec_die);
+    }
   }
   
   return 1;
@@ -658,7 +745,7 @@ int dfs_die(Dwarf_Debug dbg, int indent, Dwarf_Die die)
   int r;
   for(;;)
   {
-    show_die(indent, die);
+    show_die(dbg, indent, die);
     
    if (dwarf_child(die, &child_die, &err) == DW_DLV_OK)
    {
@@ -686,34 +773,40 @@ int show_dwarf(Elf *elf)
   Dwarf_Die die;
   Dwarf_Signed srcfile_cnt = 0;
   char **srcfile_list = 0;
+  int ret;
 
   if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
     return fprintf(stderr, "dwarf_init: %s\n", dwarf_errmsg(err) ), 0;
   
-  /* get the first unit */
-  if (dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err) != DW_DLV_OK)
-    return fprintf(stderr, "dwarf_next_cu_header: %s\n", dwarf_errmsg(err) ), 0;
-  
-  /* get first DIE */
-  if (dwarf_siblingof(dbg, NULL, &die, &err) != DW_DLV_OK)
-    return fprintf(stderr, "dwarf_siblingof: %s\n", dwarf_errmsg(err) ), 0;
-
-  /* it is assumed, that the DIE is a compilation unit. for such a CU DIE, get the source files (includes) */
-  /* such files are referenced by DW_AT_decl_file */
-  if ( dwarf_srcfiles(die, &srcfile_list, &srcfile_cnt, &err)  != DW_DLV_OK) 
+  for(;;)
   {
-    srcfile_list = 0;
-    srcfile_cnt = 0;
-  }
-  else
-  {
-    Dwarf_Signed i;
-    for( i = 0; i < srcfile_cnt; i++ )
-      printf("File %lli: %s\n", (long long int)i, srcfile_list[i]);
-  }
+    /* get the first or next unit */
+    ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
+    if ( ret == DW_DLV_ERROR)
+      return fprintf(stderr, "dwarf_next_cu_header: %s\n", dwarf_errmsg(err) ), 0;
+    if ( ret == DW_DLV_NO_ENTRY )
+      break;
+    
+    /* get first DIE */
+    if (dwarf_siblingof(dbg, NULL, &die, &err) != DW_DLV_OK)
+      return fprintf(stderr, "dwarf_siblingof: %s\n", dwarf_errmsg(err) ), 0;
 
-  
-  dfs_die(dbg, 0, die);
+    /* it is assumed, that the DIE is a compilation unit. for such a CU DIE, get the source files (includes) */
+    /* such files are referenced by DW_AT_decl_file */
+    if ( dwarf_srcfiles(die, &srcfile_list, &srcfile_cnt, &err)  != DW_DLV_OK) 
+    {
+      srcfile_list = 0;
+      srcfile_cnt = 0;
+    }
+    else
+    {
+      Dwarf_Signed i;
+      for( i = 0; i < srcfile_cnt; i++ )
+        printf("File %lli: %s\n", (long long int)i, srcfile_list[i]);
+    }
+    
+    dfs_die(dbg, 0, die);
+  }
   return 1;
 }
 

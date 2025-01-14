@@ -15,7 +15,7 @@ LOCAL_SYMBOLS:
 < 1><0x0000002e>    DW_TAG_variable
                       DW_AT_name                  file_2_b
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
-                      DW_AT_decl_line             0x00000001
+                      DW_AT_decl_line             0x00000003
                       DW_AT_decl_column           0x0000000c
                       DW_AT_type                  <0x0000003a>
                       DW_AT_external              yes(1)
@@ -27,7 +27,7 @@ LOCAL_SYMBOLS:
 < 1><0x00000041>    DW_TAG_variable
                       DW_AT_name                  file_1_a
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
-                      DW_AT_decl_line             0x00000004
+                      DW_AT_decl_line             0x00000007
                       DW_AT_decl_column           0x00000005
                       DW_AT_type                  <0x0000003a>
                       DW_AT_external              yes(1)
@@ -37,7 +37,7 @@ LOCAL_SYMBOLS:
                       DW_AT_external              yes(1)
                       DW_AT_name                  file_2_fn
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
-                      DW_AT_decl_line             0x00000002
+                      DW_AT_decl_line             0x00000005
                       DW_AT_decl_column           0x00000006
                       DW_AT_prototyped            yes(1)
                       DW_AT_declaration           yes(1)
@@ -45,7 +45,7 @@ LOCAL_SYMBOLS:
                       DW_AT_external              yes(1)
                       DW_AT_name                  main
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
-                      DW_AT_decl_line             0x00000007
+                      DW_AT_decl_line             0x0000000a
                       DW_AT_decl_column           0x00000005
                       DW_AT_type                  <0x0000003a>
                       DW_AT_low_pc                0x00001129
@@ -56,7 +56,7 @@ LOCAL_SYMBOLS:
 < 2><0x0000007d>      DW_TAG_variable
                         DW_AT_name                  file_1_x
                         DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
-                        DW_AT_decl_line             0x00000009
+                        DW_AT_decl_line             0x0000000c
                         DW_AT_decl_column           0x00000007
                         DW_AT_type                  <0x0000003a>
                         DW_AT_location              len 0x0002: 0x916c: 
@@ -69,14 +69,14 @@ Source lines (from CU-DIE at .debug_info offset 0x0000000c):
             PE prologue end, EB epilogue begin
             IS=val ISA number, DI=val discriminator value
 <pc>        [lno,col] NS BB ET PE EB IS= DI= uri: "filepath"
-0x00001129  [   8, 1] NS uri: "/home/kraus/git/elf2json/test/file_1.c"
-0x00001135  [   9, 7] NS
-0x0000113c  [  10, 3] NS
-0x00001141  [  11,24] NS
-0x0000114f  [  11,12] NS
-0x00001152  [  12,10] NS
-0x00001155  [  13, 1] NS
-0x00001157  [  13, 1] NS ET
+0x00001129  [  11, 1] NS uri: "/home/kraus/git/elf2json/test/file_1.c"
+0x00001135  [  12, 7] NS
+0x0000113c  [  13, 3] NS
+0x00001141  [  14,24] NS
+0x0000114f  [  14,12] NS
+0x00001152  [  15,10] NS
+0x00001155  [  16, 1] NS
+0x00001157  [  16, 1] NS ET
 
 COMPILE_UNIT<header overall offset = 0x0000008e>:
 < 0><0x0000000c>  DW_TAG_compile_unit
@@ -86,27 +86,32 @@ COMPILE_UNIT<header overall offset = 0x0000008e>:
                     DW_AT_comp_dir              /home/kraus/git/elf2json/test
                     DW_AT_low_pc                0x00001157
                     DW_AT_high_pc               <offset-from-lowpc> 21 <highpc: 0x0000116c>
-                    DW_AT_stmt_list             0x0000005b
+                    DW_AT_stmt_list             0x0000005d
 
 LOCAL_SYMBOLS:
 < 1><0x0000002e>    DW_TAG_variable
                       DW_AT_name                  file_2_b
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_2.c
                       DW_AT_decl_line             0x00000003
-                      DW_AT_decl_column           0x00000005
-                      DW_AT_type                  <0x00000044>
+                      DW_AT_decl_column           0x0000000c
+                      DW_AT_type                  <0x0000003a>
                       DW_AT_external              yes(1)
-                      DW_AT_location              len 0x0009: 0x031440000000000000: 
-                          DW_OP_addr 0x00004014
-< 1><0x00000044>    DW_TAG_base_type
+                      DW_AT_declaration           yes(1)
+< 1><0x0000003a>    DW_TAG_base_type
                       DW_AT_byte_size             0x00000004
                       DW_AT_encoding              DW_ATE_signed
                       DW_AT_name                  int
-< 1><0x0000004b>    DW_TAG_subprogram
+< 1><0x00000041>    DW_TAG_variable
+                      DW_AT_specification         <0x0000002e>
+                      DW_AT_decl_line             0x00000004
+                      DW_AT_decl_column           0x00000005
+                      DW_AT_location              len 0x0009: 0x031440000000000000: 
+                          DW_OP_addr 0x00004014
+< 1><0x00000052>    DW_TAG_subprogram
                       DW_AT_external              yes(1)
                       DW_AT_name                  file_2_fn
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_2.c
-                      DW_AT_decl_line             0x00000005
+                      DW_AT_decl_line             0x00000006
                       DW_AT_decl_column           0x00000007
                       DW_AT_prototyped            yes(1)
                       DW_AT_low_pc                0x00001157
@@ -122,10 +127,10 @@ Source lines (from CU-DIE at .debug_info offset 0x0000009a):
             PE prologue end, EB epilogue begin
             IS=val ISA number, DI=val discriminator value
 <pc>        [lno,col] NS BB ET PE EB IS= DI= uri: "filepath"
-0x00001157  [   6, 1] NS uri: "/home/kraus/git/elf2json/test/file_2.c"
-0x0000115f  [   7,12] NS
-0x00001169  [   8, 1] NS
-0x0000116c  [   8, 1] NS ET
+0x00001157  [   7, 1] NS uri: "/home/kraus/git/elf2json/test/file_2.c"
+0x0000115f  [   8,12] NS
+0x00001169  [   9, 1] NS
+0x0000116c  [   9, 1] NS ET
 
 .debug_str
 name at offset 0x00000000, length  141 is 'GNU C17 13.3.0 -mtune=generic -march=x86-64 -g -fasynchronous-unwind-tables -fstack-protector-strong -fstack-clash-protection -fcf-protection'
@@ -159,7 +164,7 @@ COMPILE_UNIT<header overall offset = 0x0000008e>:
                     DW_AT_comp_dir              /home/kraus/git/elf2json/test
                     DW_AT_low_pc                0x00001157
                     DW_AT_high_pc               <offset-from-lowpc> 21 <highpc: 0x0000116c>
-                    DW_AT_stmt_list             0x0000005b
+                    DW_AT_stmt_list             0x0000005d
 
 
 arange starts at 0x00001157, length of 0x00000015, cu_die_offset = 0x0000009a
