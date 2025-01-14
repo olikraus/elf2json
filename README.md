@@ -42,3 +42,11 @@ Notes:
 # elf2bin
 
 Writes none-empty sections with `SHF_ALLOC` flag to a binary file. Write address and size of each section to stdout.
+
+# elf2obj
+
+Writes functions and other objects to stdout.
+
+# elfdwarf
+
+Write the DWARF DIE tree (debug_info section of an elf file) to stdout.

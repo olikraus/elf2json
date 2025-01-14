@@ -144,7 +144,7 @@ void *get_symbol_mem_ptr(Elf *elf, GElf_Sym *symbol)
 
 
 
-int elf2obj(Elf *elf, const char *outfile)
+int elf2obj(Elf *elf)
 {
   Elf_Scn  *scn  = NULL;
   GElf_Shdr shdr;
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
   {
     if (( elf = elf_begin( fd , ELF_C_READ, NULL )) != NULL )
     {
-      if ( elf2obj(elf, argv[2]) )
+      if ( elf2obj(elf) )
       {
         elf_end(elf); 
         close(fd);  

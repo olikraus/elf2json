@@ -20,9 +20,9 @@ release: CFLAGS = -O4 -DNDEBUG -Wall -I./co
 
 
 ifeq ($(shell uname -s),Linux)
-LDFLAGS = -lelf -lm
+LDFLAGS = -lelf -ldwarf -lm
 else
-LDFLAGS = -Wl,-Bstatic -lelf -lm
+LDFLAGS = -Wl,-Bstatic -lelf -ldwarf -lm
 endif
 
 #SRC = $(shell ls *.c)
@@ -36,7 +36,7 @@ release: all
 	
 #gprof: all
 
-all: elf2json elf2bin elf2obj
+all: elf2json elf2bin elf2obj elfdwarf
 	
 elf2json: elf2json.o 
 	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
@@ -47,6 +47,10 @@ elf2bin: elf2bin.o
 elf2obj: elf2obj.o 
 	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
 
+elfdwarf: elfdwarf.o 
+	$(CC) $(CFLAGS)  $^ -o $@ $(LDFLAGS)
+
+
 clean:
-	-rm elf2json.o elf2bin.o elf2obj.o elf2json elf2bin elf2obj $(OBJ)
+	-rm elf2json.o elf2bin.o elf2obj.o elfdwarf.o elf2json elf2bin elfdwarf elf2obj $(OBJ)
 	
