@@ -50,3 +50,5 @@ Writes functions and other objects to stdout.
 # elfdwarf
 
 Write the DWARF DIE tree (debug_info section of an elf file) to stdout.
+This is not at all as good as 'dwarfdump'. Instead this is my own test tool 
+to display debug data.
