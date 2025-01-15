@@ -3,6 +3,8 @@
 extern int file_2_b;
 int file_2_b = 7;
 
+extern void  file_2_fn(void);
+
 void  file_2_fn(void)
 {
   file_2_b = 8;

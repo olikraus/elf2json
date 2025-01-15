@@ -52,7 +52,35 @@
   If the definition is first and the declaration follows later (doesn't make much sense),
   then again there is only one entry.
 
-
+  probably the same topic with DW_TAG_subprogram
+  case without prototype:
+< 1><0x00000052>    DW_TAG_subprogram
+                      DW_AT_external              yes(1)
+                      DW_AT_name                  file_2_fn
+                      DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_2.c
+                      DW_AT_decl_line             0x00000006
+                      DW_AT_decl_column           0x00000007
+                      DW_AT_prototyped            yes(1)
+                      DW_AT_low_pc                0x00001157
+                      DW_AT_high_pc               <offset-from-lowpc> 21 <highpc: 0x0000116c>
+                      DW_AT_frame_base            len 0x0001: 0x9c: 
+                          DW_OP_call_frame_cfa
+                      DW_AT_call_all_calls        yes(1)  
+  The prototype looks like this:
+  < 1><0x00000057>    DW_TAG_subprogram
+                      DW_AT_external              yes(1)
+                      DW_AT_name                  file_2_fn
+                      DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_1.c
+                      DW_AT_decl_line             0x00000005
+                      DW_AT_decl_column           0x00000006
+                      DW_AT_prototyped            yes(1)
+                      DW_AT_declaration           yes(1)
+  In general it seems, that if both exists, then the real code code contains DW_AT_low_pc/DW_AT_high_pc.
+  According to the DWARF spec:
+    "The module entry may have either a DW_AT_low_pc and DW_AT_high_pc pair
+    of attributes or a DW_AT_ranges attribute"
+  The subprogram may also have DW_AT_specification
+  
 
   Get DIE by offset:
     int dwarf_offdie(Dwarf_Debug	dbg,   Dwarf_Off offset,   Dwarf_Die *ret_die, Dwarf_Error *err);
@@ -807,8 +835,152 @@ int show_dwarf(Elf *elf)
     
     dfs_die(dbg, 0, die);
   }
+  
+  dwarf_finish(dbg, &err);	
   return 1;
 }
+
+/*=========================================*/
+
+const char *dwarf_get_die_name(Dwarf_Debug dbg, Dwarf_Die die)
+{
+  Dwarf_Error err;
+  Dwarf_Attribute attribute;
+  Dwarf_Off offset;
+  Dwarf_Die spec_die;
+  char *name = NULL;
+  
+  if ( dwarf_diename(die, &name, &err)  == DW_DLV_OK)
+    return name;
+  
+  /* the name is not there, check, if there is a DW_AT_specification reference */
+  if ( dwarf_attr(die, DW_AT_specification, &attribute, &err ) != DW_DLV_OK )
+    return NULL;        // no reference to a different DIE, so we don't have a name
+  
+  /* we have a valid DW_AT_specification attribute, get the value for the same */
+  if ( dwarf_global_formref(attribute, &offset, &err)  != DW_DLV_OK )
+    return NULL;                // can't get the offset value
+
+  /* with the offset, get the specification DIE */
+  if ( dwarf_offdie(dbg, offset, &spec_die, &err) != DW_DLV_OK )
+    return NULL;        // can't get the referenced DIE
+  
+  return dwarf_get_die_name(dbg, spec_die);           // let's recur and return the name from the reference 
+}
+
+int dwarf_search_defs_dfs(Dwarf_Debug dbg, Dwarf_Die die, const char *cu_name)
+{
+  Dwarf_Error err;
+  Dwarf_Die child_die;
+  Dwarf_Die next_die;
+  Dwarf_Half tag;
+  Dwarf_Attribute attribute;
+  int r;
+  const char *fn_name;
+  const char *var_name;
+
+  /* loop over the DIE and it's siblings, recursive calls for any child DIE */
+  for(;;)
+  {
+    /* look out for subprogram or variables TAGs */
+    if ( dwarf_tag(die, &tag, &err)  != DW_DLV_OK)
+      return dwarf_finish(dbg, &err), 0;
+    
+    fn_name = NULL;
+    var_name = NULL;
+    
+    if ( tag == DW_TAG_subprogram )
+    {
+      /* subprogram found, check whether this is a declaration or definition */
+      /* it is a definition, if either DW_AT_low_pc or DW_AT_ranges attribute is there (see DWARF spec) */
+      if ( dwarf_attr(die, DW_AT_low_pc, &attribute, &err ) == DW_DLV_OK )
+        fn_name = dwarf_get_die_name(dbg, die);
+      else if ( dwarf_attr(die, DW_AT_ranges, &attribute, &err ) == DW_DLV_OK )
+        fn_name = dwarf_get_die_name(dbg, die);
+      
+      if ( fn_name != NULL )
+        printf("CU: %s, Function: %s\n", cu_name, fn_name);
+    }
+    else if ( tag == DW_TAG_variable )
+    {
+      if ( dwarf_attr(die, DW_AT_location, &attribute, &err ) == DW_DLV_OK )
+        var_name = dwarf_get_die_name(dbg, die);
+      
+      if ( var_name != NULL )
+        printf("CU: %s, Variable: %s\n", cu_name, var_name);
+    }
+
+    if ( tag != DW_TAG_subprogram )     // skip functions, because we don't want local variables
+    {
+      /* if there is any child attched, recur to the child DIEs */
+      if (dwarf_child(die, &child_die, &err) == DW_DLV_OK)               // is there any child?
+         if ( dwarf_search_defs_dfs(dbg, child_die, cu_name) == 0 )                    // if so, do a recursive call
+           return 0;
+    }
+   
+    /* get the next DIE in the sequence */
+    next_die = NULL;
+    r = dwarf_siblingof(dbg, die, &next_die, &err);
+    if ( r == DW_DLV_ERROR )
+      return 0;
+    if ( r == DW_DLV_NO_ENTRY || next_die == NULL )                     // stop for loop if there are no more siblings
+      break;
+    die = next_die;
+  }
+  return 1;
+  
+}
+
+/*
+  show function and global variable definitions
+*/
+int show_definitions(Elf *elf)
+{
+  Dwarf_Error err;
+  Dwarf_Debug dbg;
+  Dwarf_Die die;
+  Dwarf_Half tag;
+  char *cu_name = NULL;
+  int ret;
+  
+  if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
+    return 0;
+
+  /* loop over all compilation units */
+  for(;;)
+  {
+    /* get the first or next unit */
+    ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
+    if ( ret == DW_DLV_ERROR)
+      return dwarf_finish(dbg, &err), 0;
+    if ( ret == DW_DLV_NO_ENTRY )
+      break;
+    
+    /* get first DIE */
+    if (dwarf_siblingof(dbg, NULL, &die, &err) != DW_DLV_OK)
+      return dwarf_finish(dbg, &err), 0;
+
+    /* get the tag of the DIE to validate whether this is really a compile unit */
+    if ( dwarf_tag(die, &tag, &err)  != DW_DLV_OK)
+      return dwarf_finish(dbg, &err), 0;
+
+    if ( tag == DW_TAG_compile_unit )
+    {
+      /* get the name of the compile unit */
+      if ( dwarf_diename(die, &cu_name, &err)  == DW_DLV_OK)
+      {
+        if ( dwarf_search_defs_dfs(dbg, die, cu_name) == 0 )
+          return dwarf_finish(dbg, &err), 0;
+      }
+    }
+  }
+  
+  dwarf_finish(dbg, &err);	
+  return 1;
+}
+
+
+/*=========================================*/
 
 
 int main(int argc, char **argv)
@@ -833,6 +1005,7 @@ int main(int argc, char **argv)
     {
       if ( show_dwarf(elf) )
       {
+        show_definitions(elf);
         elf_end(elf); 
         close(fd);  
         return 0;

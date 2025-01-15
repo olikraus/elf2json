@@ -111,7 +111,7 @@ LOCAL_SYMBOLS:
                       DW_AT_external              yes(1)
                       DW_AT_name                  file_2_fn
                       DW_AT_decl_file             0x00000001 /home/kraus/git/elf2json/test/file_2.c
-                      DW_AT_decl_line             0x00000006
+                      DW_AT_decl_line             0x00000008
                       DW_AT_decl_column           0x00000007
                       DW_AT_prototyped            yes(1)
                       DW_AT_low_pc                0x00001157
@@ -127,10 +127,10 @@ Source lines (from CU-DIE at .debug_info offset 0x0000009a):
             PE prologue end, EB epilogue begin
             IS=val ISA number, DI=val discriminator value
 <pc>        [lno,col] NS BB ET PE EB IS= DI= uri: "filepath"
-0x00001157  [   7, 1] NS uri: "/home/kraus/git/elf2json/test/file_2.c"
-0x0000115f  [   8,12] NS
-0x00001169  [   9, 1] NS
-0x0000116c  [   9, 1] NS ET
+0x00001157  [   9, 1] NS uri: "/home/kraus/git/elf2json/test/file_2.c"
+0x0000115f  [  10,12] NS
+0x00001169  [  11, 1] NS
+0x0000116c  [  11, 1] NS ET
 
 .debug_str
 name at offset 0x00000000, length  141 is 'GNU C17 13.3.0 -mtune=generic -march=x86-64 -g -fasynchronous-unwind-tables -fstack-protector-strong -fstack-clash-protection -fcf-protection'
