@@ -12,9 +12,9 @@
 #
 
 
-debug: CFLAGS = -g -Wall -I./co 
-sanitize: CFLAGS = -g -Wall -fsanitize=address -I./co
-release: CFLAGS = -O4 -DNDEBUG -Wall -I./co
+debug: CFLAGS = -g -Wall -I./co -DLIBDWARF_STATIC
+sanitize: CFLAGS = -g -Wall -fsanitize=address -I./co -DLIBDWARF_STATIC
+release: CFLAGS = -O4 -DNDEBUG -Wall -I./co -DLIBDWARF_STATIC
 #gprof: CFLAGS = -g -pg -DCO_USE_ZLIB -Wall -I./co
 
 
@@ -22,7 +22,11 @@ release: CFLAGS = -O4 -DNDEBUG -Wall -I./co
 ifeq ($(shell uname -s),Linux)
 LDFLAGS = -lelf -ldwarf -lm
 else
-LDFLAGS = -Wl,-Bstatic -lelf -ldwarf -lm
+# assume minge64
+LDFLAGS = -L../msys2/mingw64 -Wl,-Bstatic -lelf -ldwarf -lm
+debug: CFLAGS +=  -I../msys2/mingw64
+sanitize: CFLAGS +=  -I../msys2/mingw64
+release: CFLAGS +=  -I../msys2/mingw64
 endif
 
 #SRC = $(shell ls *.c)

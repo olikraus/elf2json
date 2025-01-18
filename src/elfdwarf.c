@@ -83,7 +83,8 @@
   
 
   Get DIE by offset:
-    int dwarf_offdie(Dwarf_Debug	dbg,   Dwarf_Off offset,   Dwarf_Die *ret_die, Dwarf_Error *err);
+    int dwarf_offdie(Dwarf_Debug dbg, Dwarf_Off offset, Dwarf_Die *ret_die, Dwarf_Error *err);
+	int dwarf_offdie_b(Dwarf_Debug dbg,	Dwarf_Off offset, Dwarf_Bool is_info, Dwarf_Die *ret_die, Dwarf_Error *err);
 
   Get offset of the DIE
   int dwarf_dieoffset(Dwarf_Die die, Dwarf_Off *ret_offset, Dwarf_Error *err);
@@ -110,6 +111,11 @@ struct _dwarf_translate_struct
 };
 typedef struct _dwarf_translate_struct dwarf_translate_struct;
 
+#if DW_LIBDWARF_VERSION_MINOR > 10
+#define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg)
+#else
+#define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg, err)
+#endif
 
 #define DT(c)  { c, #c}
 #define DTNONE() { 0, NULL }
@@ -757,7 +763,7 @@ int show_die(Dwarf_Debug dbg, int indent, Dwarf_Die die)
     if ( attr_num == DW_AT_specification )
     {
         Dwarf_Die spec_die;
-        if ( dwarf_offdie(dbg, (Dwarf_Off)uval, &spec_die, &err) == DW_DLV_OK )
+        if ( dwarf_offdie_b(dbg, (Dwarf_Off)uval, /* is_info= */ 1, &spec_die, &err) == DW_DLV_OK )
           show_die(dbg, indent+2, spec_die);
     }
   }
@@ -782,7 +788,7 @@ int dfs_die(Dwarf_Debug dbg, int indent, Dwarf_Die die)
    }
    
     next_die = NULL;
-    r = dwarf_siblingof(dbg, die, &next_die, &err);
+    r = dwarf_siblingof_b(dbg, die, /* is_info= */ 1, &next_die, &err);
     if ( r == DW_DLV_ERROR )
       return fprintf(stderr, "dwarf_siblingof: %s\n", dwarf_errmsg(err) ), 0;
     if ( r == DW_DLV_NO_ENTRY )
@@ -810,13 +816,14 @@ int show_dwarf(Elf *elf)
   {
     /* get the first or next unit */
     ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
+	// todo: use dwarf_next_cu_header_d or dwarf_next_cu_header_e
     if ( ret == DW_DLV_ERROR)
       return fprintf(stderr, "dwarf_next_cu_header: %s\n", dwarf_errmsg(err) ), 0;
     if ( ret == DW_DLV_NO_ENTRY )
       break;
     
     /* get first DIE */
-    if (dwarf_siblingof(dbg, NULL, &die, &err) != DW_DLV_OK)
+    if (dwarf_siblingof_b(dbg, NULL, /* is_info= */ 1, &die, &err) != DW_DLV_OK)
       return fprintf(stderr, "dwarf_siblingof: %s\n", dwarf_errmsg(err) ), 0;
 
     /* it is assumed, that the DIE is a compilation unit. for such a CU DIE, get the source files (includes) */
@@ -836,7 +843,7 @@ int show_dwarf(Elf *elf)
     dfs_die(dbg, 0, die);
   }
   
-  dwarf_finish(dbg, &err);	
+  MY_DWARF_FINISH(dbg, &err);	
   return 1;
 }
 
@@ -862,7 +869,7 @@ const char *dwarf_get_die_name(Dwarf_Debug dbg, Dwarf_Die die)
     return NULL;                // can't get the offset value
 
   /* with the offset, get the specification DIE */
-  if ( dwarf_offdie(dbg, offset, &spec_die, &err) != DW_DLV_OK )
+  if ( dwarf_offdie_b(dbg, offset, /* is_info= */ 1, &spec_die, &err) != DW_DLV_OK )
     return NULL;        // can't get the referenced DIE
   
   return dwarf_get_die_name(dbg, spec_die);           // let's recur and return the name from the reference 
@@ -884,7 +891,7 @@ int dwarf_search_defs_dfs(Dwarf_Debug dbg, Dwarf_Die die, const char *cu_name)
   {
     /* look out for subprogram or variables TAGs */
     if ( dwarf_tag(die, &tag, &err)  != DW_DLV_OK)
-      return dwarf_finish(dbg, &err), 0;
+      return MY_DWARF_FINISH(dbg, &err), 0;
     
     fn_name = NULL;
     var_name = NULL;
@@ -920,7 +927,7 @@ int dwarf_search_defs_dfs(Dwarf_Debug dbg, Dwarf_Die die, const char *cu_name)
    
     /* get the next DIE in the sequence */
     next_die = NULL;
-    r = dwarf_siblingof(dbg, die, &next_die, &err);
+    r = dwarf_siblingof_b(dbg, die, /* is_info= */ 1, &next_die, &err);
     if ( r == DW_DLV_ERROR )
       return 0;
     if ( r == DW_DLV_NO_ENTRY || next_die == NULL )                     // stop for loop if there are no more siblings
@@ -952,17 +959,17 @@ int show_definitions(Elf *elf)
     /* get the first or next unit */
     ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
     if ( ret == DW_DLV_ERROR)
-      return dwarf_finish(dbg, &err), 0;
+      return MY_DWARF_FINISH(dbg, &err), 0;
     if ( ret == DW_DLV_NO_ENTRY )
       break;
     
     /* get first DIE */
-    if (dwarf_siblingof(dbg, NULL, &die, &err) != DW_DLV_OK)
-      return dwarf_finish(dbg, &err), 0;
+    if (dwarf_siblingof_b(dbg, NULL, /* is_info= */ 1, &die, &err) != DW_DLV_OK)
+      return MY_DWARF_FINISH(dbg, &err), 0;
 
     /* get the tag of the DIE to validate whether this is really a compile unit */
     if ( dwarf_tag(die, &tag, &err)  != DW_DLV_OK)
-      return dwarf_finish(dbg, &err), 0;
+      return MY_DWARF_FINISH(dbg, &err), 0;
 
     if ( tag == DW_TAG_compile_unit )
     {
@@ -970,12 +977,12 @@ int show_definitions(Elf *elf)
       if ( dwarf_diename(die, &cu_name, &err)  == DW_DLV_OK)
       {
         if ( dwarf_search_defs_dfs(dbg, die, cu_name) == 0 )
-          return dwarf_finish(dbg, &err), 0;
+          return MY_DWARF_FINISH(dbg, &err), 0;
       }
     }
   }
   
-  dwarf_finish(dbg, &err);	
+  MY_DWARF_FINISH(dbg, &err);	
   return 1;
 }
 
