@@ -91,6 +91,7 @@
 */
 
 #include <stdio.h>
+#include <assert.h>
 //#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -111,7 +112,7 @@ struct _dwarf_translate_struct
 };
 typedef struct _dwarf_translate_struct dwarf_translate_struct;
 
-#if DW_LIBDWARF_VERSION_MINOR > 10
+#ifdef DW_LIBDWARF_VERSION_MINOR
 #define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg)
 #else
 #define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg, err)
@@ -806,6 +807,7 @@ int show_dwarf(int fd)
   Dwarf_Debug dbg;
   Dwarf_Die die;
   Dwarf_Signed srcfile_cnt = 0;
+  Dwarf_Unsigned next_cu_header_offset;
   char **srcfile_list = 0;
   int ret;
 
@@ -819,13 +821,35 @@ int show_dwarf(int fd)
   
   for(;;)
   {
+
+
+    /*
+      int dwarf_next_cu_header_d(Dwarf_Debug dbg, 
+          Dwarf_Bool      is_info,
+          Dwarf_Unsigned* cu_header_length,
+          Dwarf_Half*     version_stamp,
+          Dwarf_Off*      abbrev_offset,
+          Dwarf_Half*     address_size,
+          Dwarf_Half*     length_size,
+          Dwarf_Half*     extension_size,
+          Dwarf_Sig8*     type signature,
+          Dwarf_Unsigned* typeoffset,
+          Dwarf_Unsigned* next_cu_header_offset,
+          Dwarf_Half    * header_cu_type,
+          Dwarf_Error*    error);    
+    */
     /* get the first or next unit */
-    ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
+    ret = dwarf_next_cu_header_d(dbg, /*is_info*/1, /*cu_header_length*/ NULL, /* version_stamp*/ NULL, 
+      /*abbrev_offset*/ NULL, /*address_size*/ NULL, /*length_size*/NULL, /*extension_size*/NULL,/*signature*/NULL,
+      /*typeoffset*/ NULL, /*next_cu_header_offset*/&next_cu_header_offset, /*header_cu_type*/NULL, &err);
+    //ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
 	// todo: use dwarf_next_cu_header_d or dwarf_next_cu_header_e
     if ( ret == DW_DLV_ERROR)
       return fprintf(stderr, "dwarf_next_cu_header: %s\n", dwarf_errmsg(err) ), 0;
     if ( ret == DW_DLV_NO_ENTRY )
+    {
       break;
+    }
     
     /* get first DIE */
     if (dwarf_siblingof_b(dbg, NULL, /* is_info= */ 1, &die, &err) != DW_DLV_OK)
@@ -962,6 +986,7 @@ int show_definitions(int fd)
   Dwarf_Debug dbg;
   Dwarf_Die die;
   Dwarf_Half tag;
+  Dwarf_Unsigned next_cu_header_offset;
   char *cu_name = NULL;
   int ret;
   
@@ -975,8 +1000,27 @@ int show_definitions(int fd)
   /* loop over all compilation units */
   for(;;)
   {
+     /*
+      int dwarf_next_cu_header_d(Dwarf_Debug dbg, 
+          Dwarf_Bool      is_info,
+          Dwarf_Unsigned* cu_header_length,
+          Dwarf_Half*     version_stamp,
+          Dwarf_Off*      abbrev_offset,
+          Dwarf_Half*     address_size,
+          Dwarf_Half*     length_size,
+          Dwarf_Half*     extension_size,
+          Dwarf_Sig8*     type signature,
+          Dwarf_Unsigned* typeoffset,
+          Dwarf_Unsigned* next_cu_header_offset,
+          Dwarf_Half    * header_cu_type,
+          Dwarf_Error*    error);    
+    */
     /* get the first or next unit */
-    ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
+    ret = dwarf_next_cu_header_d(dbg, /*is_info*/1, /*cu_header_length*/ NULL, /* version_stamp*/ NULL, 
+      /*abbrev_offset*/ NULL, /*address_size*/ NULL, /*length_size*/NULL, /*extension_size*/NULL,/*signature*/NULL,
+      /*typeoffset*/ NULL, /*next_cu_header_offset*/&next_cu_header_offset, /*header_cu_type*/NULL, &err);
+   /* get the first or next unit */
+    //ret = dwarf_next_cu_header(dbg, NULL, NULL, NULL, NULL, NULL, &err);
     if ( ret == DW_DLV_ERROR)
       return MY_DWARF_FINISH(dbg, &err), 0;
     if ( ret == DW_DLV_NO_ENTRY )
