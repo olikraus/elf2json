@@ -97,8 +97,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include <libelf.h>
-#include <gelf.h>
+//#include <libelf.h>
+//#include <gelf.h>
 
 
 #include <libdwarf/dwarf.h>
@@ -800,7 +800,7 @@ int dfs_die(Dwarf_Debug dbg, int indent, Dwarf_Die die)
   return 1;
 }
 
-int show_dwarf(Elf *elf)
+int show_dwarf(int fd)
 {
   Dwarf_Error err;
   Dwarf_Debug dbg;
@@ -809,8 +809,13 @@ int show_dwarf(Elf *elf)
   char **srcfile_list = 0;
   int ret;
 
-  if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
-    return fprintf(stderr, "dwarf_init: %s\n", dwarf_errmsg(err) ), 0;
+  //if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
+  //  return fprintf(stderr, "dwarf_init: %s\n", dwarf_errmsg(err) ), 0;
+  /* https://sources.debian.org/data/main/d/dwarfutils/20210528-1/libdwarf/libdwarf2.1.pdf */
+  if ( dwarf_init_b(fd, /*access (0=read)*/ 0, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, &dbg, &err) != DW_DLV_OK)
+  {
+    return fprintf(stderr, "dwarf_init_b: %s\n", dwarf_errmsg(err) ), 0;
+  }
   
   for(;;)
   {
@@ -938,10 +943,20 @@ int dwarf_search_defs_dfs(Dwarf_Debug dbg, Dwarf_Die die, const char *cu_name)
   
 }
 
+#ifdef COMMENT
+int dwarf_init_b(int    /*fd*/,
+    Dwarf_Unsigned    /*access*/,
+    unsigned int      /*groupnumber*/,
+    Dwarf_Handler     /*errhand*/,
+    Dwarf_Ptr         /*errarg*/,
+    Dwarf_Debug*      /*dbg*/,
+    Dwarf_Error*      /*error*/);
+#endif
+
 /*
   show function and global variable definitions
 */
-int show_definitions(Elf *elf)
+int show_definitions(int fd)
 {
   Dwarf_Error err;
   Dwarf_Debug dbg;
@@ -950,8 +965,12 @@ int show_definitions(Elf *elf)
   char *cu_name = NULL;
   int ret;
   
-  if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
+  /* https://sources.debian.org/data/main/d/dwarfutils/20210528-1/libdwarf/libdwarf2.1.pdf */
+  if ( dwarf_init_b(fd, /*access (0=read)*/ 0, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, &dbg, &err) != DW_DLV_OK)
+  {
+    //return fprintf(stderr, "dwarf_init_b: %s\n", dwarf_errmsg(err) ), 0;
     return 0;
+  }
 
   /* loop over all compilation units */
   for(;;)
@@ -993,7 +1012,6 @@ int show_definitions(Elf *elf)
 int main(int argc, char **argv)
 {
   int fd = -1;
-  Elf *elf = NULL;
   char *elf_filename = NULL;
   if ( argc < 2 )
   {
@@ -1001,31 +1019,19 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if ( elf_version( EV_CURRENT ) == EV_NONE )
-    return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
-  
   elf_filename = argv[1];
   fd = open( elf_filename, O_RDONLY , 0);
   if ( fd >= 0 )
   {
-    if (( elf = elf_begin( fd , ELF_C_READ, NULL )) != NULL )
+    if ( show_dwarf(fd) )
     {
-      if ( show_dwarf(elf) )
-      {
-        show_definitions(elf);
-        elf_end(elf); 
-        close(fd);  
-        return 0;
-      }
-      else
-      {
-        fprintf(stderr, "Conversion failed\n");
-      }
-      elf_end(elf);
+      show_definitions(fd);
+      close(fd);  
+      return 0;
     }
     else
     {
-      fprintf(stderr, "elf_begin failed: %s\n", elf_errmsg(-1));
+      fprintf(stderr, "Conversion failed\n");
     }
     close(fd);
   }
