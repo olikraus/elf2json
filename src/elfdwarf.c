@@ -112,10 +112,37 @@ struct _dwarf_translate_struct
 };
 typedef struct _dwarf_translate_struct dwarf_translate_struct;
 
+
+
 #ifdef DW_LIBDWARF_VERSION_MINOR
+/* libdwarf */
 #define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg)
+ /*
+msys libdwarf:
+  DW_API int dwarf_init_b(int dw_fd,
+    unsigned int      dw_groupnumber,
+    Dwarf_Handler     dw_errhand,
+    Dwarf_Ptr         dw_errarg,
+    Dwarf_Debug*      dw_dbg,
+    Dwarf_Error*      dw_error);
+  */
+#define MY_DWARF_INIT(fd, dbg, err) \
+	dwarf_init_b(fd, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, dbg, err)
 #else
+/* ubuntu */
 #define MY_DWARF_FINISH(dbg, err) dwarf_finish(dbg, err)
+#ifdef COMMENT
+/* for unix there is an additional "access" argument */
+int dwarf_init_b(int    /*fd*/,
+    Dwarf_Unsigned    /*access*/,
+    unsigned int      /*groupnumber*/,
+    Dwarf_Handler     /*errhand*/,
+    Dwarf_Ptr         /*errarg*/,
+    Dwarf_Debug*      /*dbg*/,
+    Dwarf_Error*      /*error*/);
+#endif
+#define MY_DWARF_INIT(fd, dbg, err) \
+	dwarf_init_b(fd, /*access (0=read)*/ 0, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, dbg, err)
 #endif
 
 #define DT(c)  { c, #c}
@@ -814,7 +841,9 @@ int show_dwarf(int fd)
   //if (dwarf_elf_init(elf, DW_DLC_READ, NULL, NULL, &dbg, &err) != DW_DLV_OK)
   //  return fprintf(stderr, "dwarf_init: %s\n", dwarf_errmsg(err) ), 0;
   /* https://sources.debian.org/data/main/d/dwarfutils/20210528-1/libdwarf/libdwarf2.1.pdf */
-  if ( dwarf_init_b(fd, /*access (0=read)*/ 0, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, &dbg, &err) != DW_DLV_OK)
+  
+  
+  if ( MY_DWARF_INIT(fd, &dbg, &err) != DW_DLV_OK)
   {
     return fprintf(stderr, "dwarf_init_b: %s\n", dwarf_errmsg(err) ), 0;
   }
@@ -967,15 +996,6 @@ int dwarf_search_defs_dfs(Dwarf_Debug dbg, Dwarf_Die die, const char *cu_name)
   
 }
 
-#ifdef COMMENT
-int dwarf_init_b(int    /*fd*/,
-    Dwarf_Unsigned    /*access*/,
-    unsigned int      /*groupnumber*/,
-    Dwarf_Handler     /*errhand*/,
-    Dwarf_Ptr         /*errarg*/,
-    Dwarf_Debug*      /*dbg*/,
-    Dwarf_Error*      /*error*/);
-#endif
 
 /*
   show function and global variable definitions
@@ -991,7 +1011,7 @@ int show_definitions(int fd)
   int ret;
   
   /* https://sources.debian.org/data/main/d/dwarfutils/20210528-1/libdwarf/libdwarf2.1.pdf */
-  if ( dwarf_init_b(fd, /*access (0=read)*/ 0, /*groupnumber (0=debug_info)*/ 0, /* error handler */ NULL, /* arg for error handler*/ NULL, &dbg, &err) != DW_DLV_OK)
+  if ( MY_DWARF_INIT(fd, &dbg, &err) != DW_DLV_OK)
   {
     //return fprintf(stderr, "dwarf_init_b: %s\n", dwarf_errmsg(err) ), 0;
     return 0;

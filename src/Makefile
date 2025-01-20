@@ -20,10 +20,10 @@ release: CFLAGS = -O4 -DNDEBUG -Wall -I./co -DLIBDWARF_STATIC
 
 
 ifeq ($(shell uname -s),Linux)
-LDFLAGS = -lelf -ldwarf -lm
+LDFLAGS = -lelf -ldwarf -lz -lzstd -lm
 else
 # assume minge64
-LDFLAGS = -L../msys2/mingw64 -Wl,-Bstatic -lelf -ldwarf -lm
+LDFLAGS = -L../msys2/mingw64 -Wl,-Bstatic -lelf -ldwarf -lz -lzstd -lm
 debug: CFLAGS +=  -I../msys2/mingw64
 sanitize: CFLAGS +=  -I../msys2/mingw64
 release: CFLAGS +=  -I../msys2/mingw64
