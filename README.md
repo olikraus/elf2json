@@ -52,3 +52,8 @@ Writes functions and other objects to stdout.
 Write the DWARF DIE tree (debug_info section of an elf file) to stdout.
 This is not at all as good as 'dwarfdump'. Instead this is my own test tool 
 to display debug data.
+ * 'dwarf' and 'elf' do have their own toplevel interface. 'elf' is not required to read the 'dwarf' information
+ * 'dwarf' adds the relationship information between functions and global variables 
+
+
+
