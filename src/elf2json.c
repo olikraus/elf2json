@@ -2225,7 +2225,7 @@ int mainx( int argc , char ** argv )
   if ( elf_version( EV_CURRENT ) == EV_NONE )
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
 
-  fd = open( argv[1] , O_RDONLY , 0);
+  fd = open( argv[1] , O_RDONLY  | O_BINARY , 0);
   if ( fd < 0)
     return perror(argv[1]), 0;
   

@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     return fprintf(stderr, "Incorrect libelf version: %s\n", elf_errmsg(-1) ), 0;
   
   elf_filename = argv[1];
-  fd = open( elf_filename, O_RDONLY , 0);
+  fd = open( elf_filename, O_RDONLY | O_BINARY, 0);
   if ( fd >= 0 )
   {
     if (( elf = elf_begin( fd , ELF_C_READ, NULL )) != NULL )
