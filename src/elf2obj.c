@@ -81,6 +81,11 @@ void __attribute__ ((noreturn)) __stack_chk_fail (void)
 }
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+
 /*==========================================*/
 
 

@@ -105,6 +105,11 @@
 #include <libdwarf/dwarf.h>
 #include <libdwarf/libdwarf.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+
 struct _dwarf_translate_struct
 {
   size_t n;                     // number
